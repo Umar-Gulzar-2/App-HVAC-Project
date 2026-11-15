@@ -1,9 +1,10 @@
 /**
- * Chip — selectable filter chip (used on Records and Projects screens).
+ * Chip — filter chip: quiet outline by default, navy when selected.
+ * Sentence case, radius 6, tight to the 4px grid.
  */
 import React from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
-import { colors, radius, spacing, typography } from '../theme/theme';
+import { colors, fonts, radius, spacing, typography } from '../theme/theme';
 
 export default function Chip({ label, selected = false, onPress, style }) {
   return (
@@ -25,15 +26,15 @@ const styles = StyleSheet.create({
   chip: {
     paddingHorizontal: spacing.md,
     paddingVertical: 7,
-    borderRadius: radius.pill,
+    borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: colors.borderStrong,
+    borderColor: colors.hairlineStrong,
     backgroundColor: colors.surface,
     marginRight: spacing.sm,
     minHeight: 34,
     justifyContent: 'center',
   },
-  selected: { backgroundColor: colors.navy800, borderColor: colors.navy800 },
-  label: { fontSize: typography.sizeCaption, fontWeight: typography.medium, color: colors.textSecondary },
-  selectedLabel: { color: colors.textInverse, fontWeight: typography.semibold },
+  selected: { backgroundColor: colors.navy900, borderColor: colors.navy900 },
+  label: { fontFamily: fonts.medium, fontSize: typography.sizeCaption, color: colors.textSecondary },
+  selectedLabel: { color: colors.textInverse },
 });

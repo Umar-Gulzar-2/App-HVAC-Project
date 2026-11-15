@@ -1,18 +1,17 @@
 /**
- * Service Records screen (administrator) — company-wide view of recorded work.
- * Filter by project, unit, technician, service type and date range; search
- * within results. Company-level isolation is enforced in Chunk 2 with
- * Firestore security rules; this preview filters the sample dataset.
+ * Service Records screen (administrator) — company-wide logbook.
+ * Rows read like a log: mono date, status tag, unit + serial, project and
+ * technician. Filter by project, unit, technician, service type and date
+ * range; search within results. Company isolation is enforced by Firestore
+ * security rules in Chunk 2; this preview filters the sample dataset.
  */
 import { Redirect, useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import AppHeader from '../../src/components/AppHeader';
 import Button from '../../src/components/Button';
-import Card from '../../src/components/Card';
 import Chip from '../../src/components/Chip';
 import EmptyState from '../../src/components/EmptyState';
-import ListRow from '../../src/components/ListRow';
 import ScreenContainer from '../../src/components/ScreenContainer';
 import SearchBar from '../../src/components/SearchBar';
 import SignOutButton from '../../src/components/SignOutButton';
@@ -20,7 +19,7 @@ import StatusBadge from '../../src/components/StatusBadge';
 import TextField from '../../src/components/TextField';
 import { useDemoSession } from '../../src/context/DemoSessionContext';
 import { projects, projectsById, serviceRecords, technicians, techniciansById, unitsById } from '../../src/data/sampleData';
-import { colors, radius, spacing, typography } from '../../src/theme/theme';
+import { colors, fonts, radius, spacing, typography } from '../../src/theme/theme';
 
 const TYPE_FILTERS = ['All', 'Installation', 'Repair', 'Maintenance', 'Refrigerant Service', 'Replacement'];
 
@@ -57,7 +56,9 @@ export default function RecordsScreen() {
   }, [search, typeFilter, projectId, technicianId, dateFrom, dateTo]);
 
   const advancedActive = Boolean(projectId || technicianId || dateFrom || dateTo);
+  const activeFilterCount = (projectId ? 1 : 0) + (technicianId ? 1 : 0) + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0);
 
+  // Demo-level guard (real Firebase protection arrives in Chunk 2).
   if (role !== 'admin') return <Redirect href={role === 'technician' ? '/technician' : '/login'} />;
 
   const clearAll = () => {
@@ -73,8 +74,9 @@ export default function RecordsScreen() {
     <View style={styles.page}>
       <AppHeader
         variant="page"
-        title="Service Records"
+        title="Service records"
         subtitle={`${serviceRecords.length} records across your company · ${filtered.length} shown`}
+        meta="Company-wide · newest first"
         right={<SignOutButton />}
       />
       <ScreenContainer>
@@ -87,7 +89,7 @@ export default function RecordsScreen() {
           </ScrollView>
           <View style={styles.filterRow}>
             <Button
-              label={advancedActive ? 'Filters · active' : 'Filters'}
+              label={activeFilterCount > 0 ? `Filters · ${activeFilterCount}` : 'Filters'}
               variant="secondary"
               size="sm"
               onPress={() => setShowFilters(true)}
@@ -99,8 +101,8 @@ export default function RecordsScreen() {
           </View>
         </View>
 
-        {filtered.length === 0 ? (
-          <Card style={styles.listCard}>
+        <View style={styles.ledger}>
+          {filtered.length === 0 ? (
             <EmptyState
               title="No records match these filters"
               message="Change or clear the filters to see more of your company’s service history."
@@ -108,23 +110,41 @@ export default function RecordsScreen() {
               onAction={clearAll}
               testID="empty-records"
             />
-          </Card>
-        ) : (
-          <Card padded={false} style={styles.listCard}>
-            {filtered.map((record, index) => (
-              <ListRow
-                key={record.id}
-                first={index === 0}
-                title={`${record.date} · ${record.serviceType}`}
-                meta={`${record.unitId} — ${unitsById[record.unitId]?.serialNumber ?? ''}`}
-                meta2={`${projectsById[record.projectId]?.name ?? ''} · ${techniciansById[record.technicianId]?.name ?? 'Unknown'}`}
-                badge={<StatusBadge label={record.serviceType.split(' ')[0]} tone="neutral" />}
-                onPress={() => router.push(`/units/${record.unitId}`)}
-                testID={`row-record-${record.id}`}
-              />
-            ))}
-          </Card>
-        )}
+          ) : (
+            filtered.map((record, index) => {
+              const unit = unitsById[record.unitId];
+              const typeTone =
+                record.serviceType === 'Refrigerant Service'
+                  ? 'danger'
+                  : record.serviceType === 'Repair'
+                    ? 'warning'
+                    : record.serviceType === 'Installation'
+                      ? 'info'
+                      : 'neutral';
+              return (
+                <Pressable
+                  key={record.id}
+                  onPress={() => router.push(`/units/${record.unitId}`)}
+                  accessibilityRole="button"
+                  style={({ pressed }) => [styles.recordRow, index > 0 && styles.recordDivider, pressed && styles.recordPressed]}
+                  testID={`row-record-${record.id}`}
+                >
+                  <View style={styles.recordHead}>
+                    <Text style={styles.recordDate}>{record.date}</Text>
+                    <StatusBadge label={record.serviceType} tone={typeTone} dot={false} />
+                  </View>
+                  <Text style={styles.recordUnit} numberOfLines={1}>
+                    {record.unitId}
+                    <Text style={styles.recordSerial}>   {unit?.serialNumber ?? ''}</Text>
+                  </Text>
+                  <Text style={styles.recordMeta} numberOfLines={1}>
+                    {projectsById[record.projectId]?.name ?? ''} · {techniciansById[record.technicianId]?.name ?? 'Unknown'}
+                  </Text>
+                </Pressable>
+              );
+            })
+          )}
+        </View>
       </ScreenContainer>
 
       {/* Advanced filters modal */}
@@ -173,25 +193,46 @@ export default function RecordsScreen() {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: colors.surfaceAlt },
+  page: { flex: 1, backgroundColor: colors.canvas },
   controls: { marginTop: spacing.lg },
   chipRow: { marginTop: spacing.md },
   filterRow: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm },
-  listCard: { marginTop: spacing.md },
+  ledger: {
+    marginTop: spacing.md,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    borderRadius: radius.lg,
+    overflow: 'hidden',
+  },
+  recordRow: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md, minHeight: 52 },
+  recordDivider: { borderTopWidth: 1, borderTopColor: colors.hairline },
+  recordPressed: { backgroundColor: colors.canvas },
+  recordHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
+  recordDate: {
+    fontFamily: fonts.monoMedium,
+    fontSize: typography.sizeBody,
+    color: colors.textPrimary,
+    letterSpacing: 0.2,
+    fontVariant: ['tabular-nums'],
+  },
+  recordUnit: { fontFamily: fonts.monoMedium, fontSize: typography.sizeCaption, color: colors.textSecondary, marginTop: 5, letterSpacing: 0.2 },
+  recordSerial: { fontFamily: fonts.mono, fontSize: typography.sizeCaption, color: colors.textMuted, letterSpacing: 0.2 },
+  recordMeta: { fontFamily: fonts.regular, fontSize: typography.sizeCaption, color: colors.textMuted, marginTop: 3, lineHeight: 16 },
   scrim: { flex: 1, backgroundColor: colors.scrim, justifyContent: 'flex-end' },
   sheet: {
     backgroundColor: colors.surface,
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
     padding: spacing.xl,
     maxHeight: '80%',
   },
-  sheetTitle: { fontSize: typography.sizeBodyLarge, fontWeight: typography.bold, color: colors.textPrimary, marginBottom: spacing.md },
+  sheetTitle: { fontFamily: fonts.medium, fontSize: typography.sizeBodyLarge, color: colors.textPrimary, marginBottom: spacing.sm },
   sheetScroll: { flexGrow: 0 },
   fieldLabel: {
-    fontSize: typography.sizeOverline,
-    fontWeight: typography.bold,
-    letterSpacing: 1,
+    fontFamily: fonts.monoMedium,
+    fontSize: typography.sizeMeta,
+    letterSpacing: 0.8,
     color: colors.textMuted,
     textTransform: 'uppercase',
     marginTop: spacing.lg,

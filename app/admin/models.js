@@ -1,14 +1,13 @@
 /**
  * AC Models screen (administrator) — reusable equipment model entries.
- * Search + list layout work now; create/edit/deactivate CRUD connects to
- * Firestore in Chunk 4.
+ * Model number leads in mono (engineers search by model), manufacturer and
+ * equipment type follow. CRUD connects to Firestore in Chunk 4.
  */
 import { Redirect, useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import AppHeader from '../../src/components/AppHeader';
-import Card from '../../src/components/Card';
-import Chip from '../../src/components/Chip';
 import EmptyState from '../../src/components/EmptyState';
 import ListRow from '../../src/components/ListRow';
 import ScreenContainer from '../../src/components/ScreenContainer';
@@ -17,7 +16,7 @@ import SignOutButton from '../../src/components/SignOutButton';
 import StatusBadge from '../../src/components/StatusBadge';
 import { useDemoSession } from '../../src/context/DemoSessionContext';
 import { acModels, units } from '../../src/data/sampleData';
-import { colors, spacing } from '../../src/theme/theme';
+import { colors, fonts, radius, spacing, typography } from '../../src/theme/theme';
 
 const FILTERS = [
   { id: 'all', label: 'All' },
@@ -35,60 +34,103 @@ export default function AcModelsScreen() {
     const query = search.trim().toLowerCase();
     return acModels
       .filter((m) => (filter === 'all' ? true : m.status === filter))
-      .filter((m) => !query || m.manufacturer.toLowerCase().includes(query) || m.modelNumber.toLowerCase().includes(query) || m.equipmentType.toLowerCase().includes(query));
+      .filter(
+        (m) =>
+          !query ||
+          m.manufacturer.toLowerCase().includes(query) ||
+          m.modelNumber.toLowerCase().includes(query) ||
+          m.equipmentType.toLowerCase().includes(query)
+      );
   }, [search, filter]);
 
   // Demo-level guard (real Firebase protection arrives in Chunk 2).
   if (role !== 'admin') return <Redirect href={role === 'technician' ? '/technician' : '/login'} />;
 
-  const comingSoon = (action) => Alert.alert(action, 'Model create/edit/deactivate connects to Firestore in Milestone 4.');
+  const comingSoon = (action) => Alert.alert(action, 'Model create, edit and deactivate connect to Firestore in Milestone 4.');
 
   return (
     <View style={styles.page}>
-      <AppHeader variant="page" title="AC Models" subtitle="Reusable manufacturer & model entries for registering equipment" right={<SignOutButton />} />
+      <AppHeader
+        variant="page"
+        title="AC models"
+        subtitle="Reusable manufacturer and model entries used when registering equipment"
+        meta={`${visible.length} of ${acModels.length} shown`}
+        right={<SignOutButton />}
+      />
       <ScreenContainer>
         <View style={styles.controls}>
           <SearchBar value={search} onChangeText={setSearch} placeholder="Search manufacturer, model, type…" testID="search-models" />
-          <View style={styles.chipRow}>
+          <View style={styles.segmented}>
             {FILTERS.map((f) => (
-              <Chip key={f.id} label={f.label} selected={filter === f.id} onPress={() => setFilter(f.id)} />
+              <Pressable
+                key={f.id}
+                onPress={() => setFilter(f.id)}
+                style={[styles.segmentItem, filter === f.id && styles.segmentItemActive]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: filter === f.id }}
+                testID={`filter-${f.id}`}
+              >
+                <Text style={[styles.segmentLabel, filter === f.id && styles.segmentLabelActive]}>{f.label}</Text>
+              </Pressable>
             ))}
           </View>
         </View>
 
-        <Card style={styles.addCard}>
-          <ListRow title="＋ New AC Model" meta="Add a manufacturer, model number and equipment type" onPress={() => comingSoon('New AC model')} testID="row-new-model" />
-        </Card>
+        <View style={styles.ledger}>
+          <ListRow
+            first
+            title="New model"
+            meta="Add a manufacturer, model number and equipment type"
+            accent
+            onPress={() => comingSoon('New model')}
+            trailing={<Ionicons name="add" size={20} color={colors.textAccent} />}
+            testID="row-new-model"
+          />
 
-        {visible.length === 0 ? (
-          <Card style={styles.listCard}>
+          {visible.length === 0 ? (
             <EmptyState title="No models match your search" message="Adjust the search or filters to find a model entry." testID="empty-models" />
-          </Card>
-        ) : (
-          <Card padded={false} style={styles.listCard}>
-            {visible.map((model, index) => (
+          ) : (
+            visible.map((model) => (
               <ListRow
                 key={model.id}
-                first={index === 0}
-                title={`${model.manufacturer} ${model.modelNumber}`}
-                meta={model.equipmentType}
+                title={model.modelNumber}
+                monoTitle
+                meta={`${model.manufacturer} · ${model.equipmentType}`}
                 meta2={`${units.filter((u) => u.modelId === model.id).length} registered units`}
                 badge={<StatusBadge label={model.status === 'active' ? 'Active' : 'Inactive'} tone={model.status === 'active' ? 'success' : 'neutral'} />}
                 onPress={() => comingSoon('Edit model')}
                 testID={`row-model-${model.id}`}
               />
-            ))}
-          </Card>
-        )}
+            ))
+          )}
+        </View>
       </ScreenContainer>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: colors.surfaceAlt },
+  page: { flex: 1, backgroundColor: colors.canvas },
   controls: { marginTop: spacing.lg },
-  chipRow: { flexDirection: 'row', marginTop: spacing.md },
-  addCard: { marginTop: spacing.md },
-  listCard: { marginTop: spacing.md },
+  segmented: {
+    flexDirection: 'row',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    borderRadius: radius.md,
+    padding: 3,
+    marginTop: spacing.md,
+  },
+  segmentItem: { flex: 1, paddingVertical: 7, borderRadius: radius.sm, alignItems: 'center' },
+  segmentItemActive: { backgroundColor: colors.navy900 },
+  segmentLabel: { fontFamily: fonts.medium, fontSize: typography.sizeCaption, color: colors.textSecondary },
+  segmentLabelActive: { color: colors.textInverse },
+  ledger: {
+    marginTop: spacing.md,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    borderRadius: radius.lg,
+    overflow: 'hidden',
+  },
 });

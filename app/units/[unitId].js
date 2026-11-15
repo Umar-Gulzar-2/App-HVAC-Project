@@ -1,32 +1,24 @@
 /**
- * Unit Details screen — permanent unit identity + complete service timeline.
- * The timeline shows every record ever saved for this unit, newest first.
- * Service records are preserved; new work never overwrites earlier records.
+ * Unit Details — the equipment record: mono unit ID, spec sheet, and the
+ * complete service logbook (newest first). Records are preserved; new work
+ * never overwrites earlier entries.
  */
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import ActionBar from '../../src/components/ActionBar';
 import AppHeader from '../../src/components/AppHeader';
-import Button from '../../src/components/Button';
 import Card from '../../src/components/Card';
 import EmptyState from '../../src/components/EmptyState';
 import ScreenContainer from '../../src/components/ScreenContainer';
 import SectionHeader from '../../src/components/SectionHeader';
 import SignOutButton from '../../src/components/SignOutButton';
+import SpecRow from '../../src/components/SpecRow';
 import StatusBadge from '../../src/components/StatusBadge';
 import TimelineItem from '../../src/components/TimelineItem';
 import { useDemoSession } from '../../src/context/DemoSessionContext';
 import { acModelsById, projectsById, serviceRecords, techniciansById, unitsById } from '../../src/data/sampleData';
-import { colors, spacing, textStyles, typography } from '../../src/theme/theme';
-
-function DetailField({ label, value, wide = false }) {
-  return (
-    <View style={[styles.field, wide && styles.fieldWide]}>
-      <Text style={styles.fieldLabel}>{label}</Text>
-      <Text style={styles.fieldValue}>{value ?? '—'}</Text>
-    </View>
-  );
-}
+import { colors, fonts, spacing, typography } from '../../src/theme/theme';
 
 export default function UnitDetailsScreen() {
   const router = useRouter();
@@ -35,10 +27,7 @@ export default function UnitDetailsScreen() {
 
   const unit = useMemo(() => unitsById[unitId], [unitId]);
   const timeline = useMemo(
-    () =>
-      serviceRecords
-        .filter((r) => r.unitId === unitId)
-        .sort((a, b) => b.date.localeCompare(a.date)),
+    () => serviceRecords.filter((r) => r.unitId === unitId).sort((a, b) => b.date.localeCompare(a.date)),
     [unitId]
   );
 
@@ -47,7 +36,7 @@ export default function UnitDetailsScreen() {
   if (!unit) {
     return (
       <View style={styles.page}>
-        <AppHeader variant="page" title="Unit details" subtitle="Unit not found" right={<SignOutButton />} />
+        <AppHeader variant="page" title="Unit record" right={<SignOutButton />} />
         <ScreenContainer>
           <Card style={styles.missingCard}>
             <EmptyState
@@ -70,92 +59,110 @@ export default function UnitDetailsScreen() {
     <View style={styles.page}>
       <AppHeader
         variant="page"
+        titleMono
         title={unit.id}
         subtitle={`${model?.manufacturer ?? ''} ${model?.modelNumber ?? ''} · ${project?.name ?? ''}`}
-        badgeLabel="SHARED COMPANY EQUIPMENT"
+        meta={`Serial ${unit.serialNumber}`}
         right={<SignOutButton />}
       />
-      <ScreenContainer>
-        {/* Identity block */}
-        <Card style={styles.identityCard}>
-          <View style={styles.identityHead}>
-            <View style={styles.identityIdWrap}>
-              <Text style={styles.overline}>Permanent unit ID</Text>
-              <Text style={styles.unitId} testID="unit-id">{unit.id}</Text>
-            </View>
+      <ScreenContainer contentStyle={isTechnician ? styles.contentWithBar : undefined}>
+        {/* Spec sheet */}
+        <Card style={styles.specCard} padded={false} testID="spec-sheet">
+          <View style={styles.specHead}>
+            <Text style={styles.specHeadLabel}>Equipment record</Text>
             <StatusBadge label="Active" tone="success" />
           </View>
-          <View style={styles.fieldGrid}>
-            <DetailField label="Serial number" value={unit.serialNumber} />
-            <DetailField label="Installation date" value={unit.installationDate} />
-            <DetailField label="Manufacturer" value={model?.manufacturer} />
-            <DetailField label="Model number" value={model?.modelNumber} />
-            <DetailField label="Equipment type" value={model?.equipmentType} />
-            <DetailField label="Refrigerant type" value={unit.refrigerantType} />
-            <DetailField label="Full refrigerant charge" value={`${unit.fullChargeLbs} lbs`} />
-            <DetailField label="Project" value={project?.name} />
+          <View style={styles.specBody}>
+            <SpecRow label="Permanent unit ID" value={unit.id} mono />
+            <SpecRow label="Serial number" value={unit.serialNumber} mono />
+            <SpecRow label="Installation date" value={unit.installationDate} mono />
+            <SpecRow label="Manufacturer" value={model?.manufacturer} />
+            <SpecRow label="Model number" value={model?.modelNumber} mono />
+            <SpecRow label="Equipment type" value={model?.equipmentType} />
+            <SpecRow label="Refrigerant type" value={unit.refrigerantType} mono />
+            <SpecRow label="Full refrigerant charge" value={`${unit.fullChargeLbs} lbs`} mono />
+            <SpecRow label="Project" value={project?.name} last />
           </View>
         </Card>
 
-        {/* Service history */}
-        <SectionHeader title={`Service history (${timeline.length})`} />
-        <Card>
-          {timeline.length === 0 ? (
-            <EmptyState
-              title="No service records yet"
-              message="Installation, repair, maintenance and refrigerant service records for this unit will appear here."
-              actionLabel={isTechnician ? 'Add Service Record' : undefined}
-              onAction={isTechnician ? () => router.push(`/service/new?unitId=${unit.id}`) : undefined}
-              testID="empty-history"
-            />
-          ) : (
-            timeline.map((record, index) => (
-              <TimelineItem
-                key={record.id}
-                record={record}
-                technicianName={techniciansById[record.technicianId]?.name}
-                isLast={index === timeline.length - 1}
+        {/* Service logbook */}
+        <SectionHeader title="Service history" count={`${timeline.length} entries`} />
+        <Card padded={false}>
+          <View style={styles.logPad}>
+            {timeline.length === 0 ? (
+              <EmptyState
+                title="No service records yet"
+                message="Installation, repair, maintenance and refrigerant service records for this unit will appear here."
+                actionLabel={isTechnician ? 'Add service record' : undefined}
+                onAction={isTechnician ? () => router.push(`/service/new?unitId=${unit.id}`) : undefined}
+                testID="empty-history"
               />
-            ))
-          )}
+            ) : (
+              timeline.map((record, index) => (
+                <TimelineItem
+                  key={record.id}
+                  record={record}
+                  technicianName={techniciansById[record.technicianId]?.name}
+                  isLast={index === timeline.length - 1}
+                />
+              ))
+            )}
+          </View>
         </Card>
 
-        {isTechnician ? (
-          <Button
-            label="Add Service Record"
-            size="lg"
-            onPress={() => router.push(`/service/new?unitId=${unit.id}`)}
-            style={styles.addButton}
-            testID="btn-add-service"
-          />
-        ) : (
+        {!isTechnician ? (
           <Text style={styles.adminNote}>Service work is recorded by technicians from their dashboard or this screen.</Text>
+        ) : (
+          <View style={styles.trailingSpace} />
         )}
       </ScreenContainer>
+
+      {isTechnician ? (
+        <ActionBar
+          label="Add service record"
+          onPress={() => router.push(`/service/new?unitId=${unit.id}`)}
+          testID="btn-add-service"
+        />
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: colors.surfaceAlt },
+  page: { flex: 1, backgroundColor: colors.canvas },
+  contentWithBar: { paddingBottom: spacing.xl },
   missingCard: { marginTop: spacing.xl },
-  identityCard: { marginTop: spacing.lg },
-  identityHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.lg },
-  identityIdWrap: { flex: 1, paddingRight: spacing.md },
-  overline: { ...textStyles.overline, marginBottom: spacing.xs },
-  unitId: { ...textStyles.title, fontSize: 22, letterSpacing: 0.5 },
-  fieldGrid: { flexDirection: 'row', flexWrap: 'wrap', borderTopWidth: 1, borderTopColor: colors.border, paddingTop: spacing.md },
-  field: { width: '50%', paddingVertical: spacing.sm, paddingRight: spacing.md },
-  fieldWide: { width: '100%' },
-  fieldLabel: { fontSize: typography.sizeOverline, fontWeight: typography.semibold, color: colors.textMuted, letterSpacing: 0.6, textTransform: 'uppercase' },
-  fieldValue: { fontSize: typography.sizeBody, fontWeight: typography.medium, color: colors.textPrimary, marginTop: 3 },
-  addButton: { marginTop: spacing.xl },
+  specCard: { marginTop: spacing.lg },
+  specHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.hairline,
+    backgroundColor: colors.canvas,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+  },
+  specHeadLabel: {
+    fontFamily: fonts.monoMedium,
+    fontSize: typography.sizeMeta,
+    letterSpacing: 1,
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+  },
+  specBody: { paddingHorizontal: spacing.lg, paddingVertical: spacing.xs },
+  logPad: { paddingHorizontal: spacing.lg, paddingVertical: spacing.xs },
   adminNote: {
+    fontFamily: fonts.regular,
     fontSize: typography.sizeCaption,
     color: colors.textMuted,
     textAlign: 'center',
     marginTop: spacing.xl,
-    lineHeight: typography.leadingNormal,
+    lineHeight: 17,
     paddingHorizontal: spacing.lg,
   },
+  trailingSpace: { height: spacing.lg },
 });

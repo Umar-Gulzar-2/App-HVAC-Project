@@ -31,9 +31,9 @@ describe('Admin Records screen', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('2026-10-22 · Refrigerant Service')).toBeTruthy();
+      expect(screen.getByText('2026-10-22')).toBeTruthy();
     });
-    expect(screen.getByText('2026-03-04 · Maintenance')).toBeTruthy();
+    expect(screen.getByText('2026-03-04')).toBeTruthy();
     expect(screen.getByText('8 records across your company · 8 shown')).toBeTruthy();
   });
 
@@ -45,7 +45,7 @@ describe('Admin Records screen', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('2026-03-04 · Maintenance')).toBeTruthy();
+      expect(screen.getByText('2026-03-04')).toBeTruthy();
     });
 
     await fireEvent.changeText(screen.getByTestId('search-records'), 'CAR-48TC-90066');
@@ -53,8 +53,8 @@ describe('Admin Records screen', () => {
     await waitFor(() => {
       expect(screen.getByText('8 records across your company · 1 shown')).toBeTruthy();
     });
-    expect(screen.queryByText('2026-03-04 · Maintenance')).toBeNull();
-    expect(screen.getByText('2026-09-30 · Repair')).toBeTruthy();
+    expect(screen.queryByText('2026-03-04')).toBeNull();
+    expect(screen.getByText('2026-09-30')).toBeTruthy();
   });
 
   it('shows the empty state when filters match nothing', async () => {
@@ -65,7 +65,7 @@ describe('Admin Records screen', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('2026-03-04 · Maintenance')).toBeTruthy();
+      expect(screen.getByText('2026-03-04')).toBeTruthy();
     });
 
     await fireEvent.changeText(screen.getByTestId('search-records'), 'no-such-equipment-zzz');
@@ -83,7 +83,7 @@ describe('Admin Records screen', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('2026-03-04 · Maintenance')).toBeTruthy();
+      expect(screen.getByText('2026-03-04')).toBeTruthy();
     });
 
     await fireEvent.press(screen.getByTestId('chip-Refrigerant Service'));
@@ -91,6 +91,6 @@ describe('Admin Records screen', () => {
     await waitFor(() => {
       expect(screen.getByText('8 records across your company · 3 shown')).toBeTruthy();
     });
-    expect(screen.queryByText('2026-03-04 · Maintenance')).toBeNull();
+    expect(screen.queryByText('2026-03-04')).toBeNull();
   });
 });

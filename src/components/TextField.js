@@ -4,7 +4,7 @@
  */
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { colors, radius, spacing, typography } from '../theme/theme';
+import { colors, fonts, radius, spacing, typography } from '../theme/theme';
 
 export default function TextField({
   label,
@@ -55,8 +55,8 @@ export default function TextField({
 const styles = StyleSheet.create({
   wrapper: { marginBottom: spacing.lg },
   label: {
+    fontFamily: fonts.medium,
     fontSize: typography.sizeCaption,
-    fontWeight: typography.semibold,
     color: colors.textSecondary,
     letterSpacing: 0.3,
     marginBottom: spacing.xs,
@@ -66,17 +66,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.hairlineStrong,
     borderRadius: radius.md,
     paddingHorizontal: spacing.md,
     minHeight: 46,
   },
   multilineRow: { alignItems: 'flex-start', paddingVertical: spacing.sm },
   inputRowError: { borderColor: colors.danger },
-  disabledRow: { backgroundColor: colors.surfaceSunken },
-  input: { flex: 1, fontSize: typography.sizeBody, color: colors.textPrimary, paddingVertical: 10 },
+  disabledRow: { backgroundColor: colors.canvasSunken },
+  input: { flex: 1, fontFamily: fonts.regular, fontSize: typography.sizeBody, color: colors.textPrimary, paddingVertical: 10 },
   multilineInput: { minHeight: 88, textAlignVertical: 'top' },
-  toggle: { fontSize: typography.sizeCaption, fontWeight: typography.semibold, color: colors.blue600, paddingLeft: spacing.sm },
-  error: { fontSize: typography.sizeCaption, color: colors.danger, marginTop: spacing.xs },
-  helper: { fontSize: typography.sizeCaption, color: colors.textMuted, marginTop: spacing.xs },
+  toggle: { fontFamily: fonts.medium, fontSize: typography.sizeCaption, color: colors.textAccent, paddingLeft: spacing.sm },
+  error: { fontFamily: fonts.regular, fontSize: typography.sizeCaption, color: colors.danger, marginTop: spacing.xs },
+  helper: { fontFamily: fonts.regular, fontSize: typography.sizeCaption, color: colors.textMuted, marginTop: spacing.xs },
 });

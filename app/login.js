@@ -9,15 +9,14 @@
  * The "Preview as" buttons switch roles so both dashboards can be reviewed.
  * Chunk 2 replaces this with real Firebase Authentication.
  */
-import { Ionicons } from '@expo/vector-icons';
 import { Redirect, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Button from '../src/components/Button';
 import TextField from '../src/components/TextField';
 import { useDemoSession } from '../src/context/DemoSessionContext';
-import { colors, radius, spacing, typography } from '../src/theme/theme';
+import { colors, fonts, radius, spacing, typography } from '../src/theme/theme';
 
 function validateEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
@@ -53,8 +52,8 @@ export default function LoginScreen() {
     if (Object.keys(nextErrors).length > 0) return;
 
     setSubmitting(true);
-    // Demo sign-in: chooses the dashboard by the account type below.
-    // Chunk 2 replaces this block with Firebase signInWithEmailAndPassword.
+    // Demo sign-in. Chunk 2 replaces this with Firebase
+    // signInWithEmailAndPassword (the account type decides the dashboard).
     setTimeout(() => {
       setSubmitting(false);
       signInAsTechnician();
@@ -91,18 +90,22 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: insets.top + spacing.xxxl, paddingBottom: insets.bottom + spacing.xxl }]} keyboardShouldPersistTaps="handled">
-        {/* Brand block — deep navy foundation */}
+    <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView
+        contentContainerStyle={[styles.scroll, { paddingTop: insets.top + spacing.xxl, paddingBottom: insets.bottom + spacing.xl }]}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Brand block — navy field, mono lockup, plain-language context */}
         <View style={styles.brand}>
-          <View style={styles.brandBar} />
+          <Text style={styles.wordmark}>HVAC COMPLY</Text>
           <Text style={styles.brandName}>HVAC Comply</Text>
-          <Text style={styles.brandTagline}>Commercial HVAC equipment & refrigerant recordkeeping{'\n'}with compliance attention review</Text>
+          <Text style={styles.brandTagline}>
+            Equipment, refrigerant and service records{'\n'}for commercial HVAC companies
+          </Text>
         </View>
 
-        {/* Auth card */}
-        <View style={styles.card}>
-          {/* Mode switch */}
+        {/* Credentials sheet */}
+        <View style={styles.sheet}>
           <View style={styles.segment}>
             <Pressable style={[styles.segmentItem, mode === 'signin' && styles.segmentActive]} onPress={() => switchMode('signin')}>
               <Text style={[styles.segmentLabel, mode === 'signin' && styles.segmentLabelActive]}>Sign In</Text>
@@ -114,7 +117,9 @@ export default function LoginScreen() {
 
           {mode === 'signup' ? (
             <>
-              <Text style={styles.intro}>Create the company account for your HVAC business. You will be the administrator.</Text>
+              <Text style={styles.intro}>
+                Create the company account for your business. You will be the administrator.
+              </Text>
               <TextField
                 label="Company name"
                 value={companyName}
@@ -166,62 +171,98 @@ export default function LoginScreen() {
           />
         </View>
 
-        {/* Preview role switcher — clearly labelled as preview, not authentication */}
+        {/* Preview dock — clearly not authentication */}
         <View style={styles.preview}>
-          <View style={styles.previewHeader}>
-            <Ionicons name="eye-outline" size={15} color={colors.textOnNavyMuted} />
-            <Text style={styles.previewTitle}>Preview this build</Text>
-          </View>
+          <Text style={styles.previewLabel}>Preview this build</Text>
           <Text style={styles.previewText}>
-            Firebase sign-in connects in Milestone 2. Use these buttons to review each role’s screens now.
+            Firebase sign-in connects in Milestone 2. Open each role’s screens now:
           </Text>
           <View style={styles.previewButtons}>
             <Button label="Administrator view" variant="secondary" size="sm" onPress={() => previewSignIn('admin')} style={styles.previewButton} />
             <Button label="Technician view" variant="secondary" size="sm" onPress={() => previewSignIn('technician')} style={styles.previewButton} />
           </View>
         </View>
+
+        <Text style={styles.footer}>Student prototype · not an EPA-approved product</Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: colors.navy900 },
+  root: { flex: 1, backgroundColor: colors.navy900 },
   scroll: { paddingHorizontal: spacing.lg, minHeight: '100%' },
-  brand: { marginBottom: spacing.xxl },
-  brandBar: { width: 34, height: 4, borderRadius: 2, backgroundColor: colors.blue500, marginBottom: spacing.lg },
-  brandName: { fontSize: 34, fontWeight: typography.bold, color: colors.textOnNavy, letterSpacing: -0.8 },
-  brandTagline: { fontSize: typography.sizeBodySmall, color: colors.textOnNavyMuted, marginTop: spacing.sm, lineHeight: typography.leadingRelaxed },
-  card: {
+  brand: { marginBottom: spacing.xl },
+  wordmark: {
+    fontFamily: fonts.monoSemibold,
+    fontSize: typography.sizeCaption,
+    letterSpacing: 2.6,
+    color: '#6E87A3',
+    marginBottom: spacing.lg,
+  },
+  brandName: {
+    fontFamily: fonts.semibold,
+    fontSize: typography.sizeDisplay,
+    letterSpacing: -0.8,
+    color: colors.textOnNavy,
+  },
+  brandTagline: {
+    fontFamily: fonts.regular,
+    fontSize: typography.sizeBodySmall,
+    color: colors.textOnNavyMuted,
+    marginTop: spacing.sm,
+    lineHeight: 19,
+  },
+  sheet: {
     backgroundColor: colors.surface,
-    borderRadius: radius.lg,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
     padding: spacing.xl,
-    borderWidth: 1,
-    borderColor: colors.navy700,
   },
   segment: {
     flexDirection: 'row',
-    backgroundColor: colors.surfaceSunken,
+    backgroundColor: colors.canvasSunken,
     borderRadius: radius.md,
     padding: 3,
     marginBottom: spacing.lg,
   },
   segmentItem: { flex: 1, paddingVertical: 9, borderRadius: radius.sm, alignItems: 'center' },
-  segmentActive: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  segmentLabel: { fontSize: typography.sizeCaption, fontWeight: typography.semibold, color: colors.textSecondary },
-  segmentLabelActive: { color: colors.navy800 },
-  intro: { fontSize: typography.sizeBodySmall, color: colors.textSecondary, marginBottom: spacing.lg, lineHeight: typography.leadingNormal },
+  segmentActive: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.hairlineStrong },
+  segmentLabel: { fontFamily: fonts.medium, fontSize: typography.sizeCaption, color: colors.textSecondary },
+  segmentLabelActive: { color: colors.textPrimary },
+  intro: {
+    fontFamily: fonts.regular,
+    fontSize: typography.sizeBodySmall,
+    color: colors.textSecondary,
+    marginBottom: spacing.lg,
+    lineHeight: 19,
+  },
   preview: {
-    marginTop: spacing.xl,
-    borderRadius: radius.lg,
+    marginTop: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.navy600,
+    borderColor: '#27486B',
+    borderRadius: radius.lg,
     backgroundColor: colors.navy800,
     padding: spacing.lg,
   },
-  previewHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.xs },
-  previewTitle: { fontSize: typography.sizeCaption, fontWeight: typography.bold, color: colors.textOnNavy, letterSpacing: 0.5 },
-  previewText: { fontSize: typography.sizeCaption, color: colors.textOnNavyMuted, lineHeight: typography.leadingNormal },
+  previewLabel: {
+    fontFamily: fonts.monoMedium,
+    fontSize: typography.sizeMeta,
+    letterSpacing: 1.4,
+    color: '#7FA3CC',
+    textTransform: 'uppercase',
+    marginBottom: spacing.xs,
+  },
+  previewText: { fontFamily: fonts.regular, fontSize: typography.sizeCaption, color: colors.textOnNavyMuted, lineHeight: 17 },
   previewButtons: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
   previewButton: { flex: 1, backgroundColor: colors.surface },
+  footer: {
+    fontFamily: fonts.mono,
+    fontSize: typography.sizeMeta,
+    letterSpacing: 0.8,
+    color: '#5E7794',
+    textAlign: 'center',
+    marginTop: spacing.xl,
+    textTransform: 'uppercase',
+  },
 });

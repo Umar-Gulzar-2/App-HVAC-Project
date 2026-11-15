@@ -27,6 +27,6 @@ export default function ScreenContainer({ children, scrollable = true, style, co
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: colors.surfaceAlt },
+  page: { flex: 1, backgroundColor: colors.canvas },
   content: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg },
 });

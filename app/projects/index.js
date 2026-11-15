@@ -1,15 +1,13 @@
 /**
  * Projects screen — searchable list of company projects.
- * Admin: sees all projects and management actions.
- * Technician: sees active projects only (read view).
- * Real CRUD arrives in Chunk 4; search + status filter work on sample data now.
+ * Admin: all projects plus a create command. Technician: active only.
+ * Real CRUD arrives in Chunk 4; search and status filter work on sample data.
  */
 import { Redirect, useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import AppHeader from '../../src/components/AppHeader';
-import Card from '../../src/components/Card';
-import Chip from '../../src/components/Chip';
 import EmptyState from '../../src/components/EmptyState';
 import ListRow from '../../src/components/ListRow';
 import ScreenContainer from '../../src/components/ScreenContainer';
@@ -18,7 +16,7 @@ import SignOutButton from '../../src/components/SignOutButton';
 import StatusBadge from '../../src/components/StatusBadge';
 import { useDemoSession } from '../../src/context/DemoSessionContext';
 import { projects, units } from '../../src/data/sampleData';
-import { colors, spacing } from '../../src/theme/theme';
+import { colors, fonts, radius, spacing, typography } from '../../src/theme/theme';
 
 const STATUS_FILTERS = [
   { id: 'all', label: 'All' },
@@ -40,14 +38,22 @@ export default function ProjectsScreen() {
     return projects
       .filter((p) => (isAdmin ? true : p.status === 'active'))
       .filter((p) => (statusFilter === 'all' ? true : p.status === statusFilter))
-      .filter((p) => !query || p.name.toLowerCase().includes(query) || p.client.toLowerCase().includes(query) || p.siteAddress.toLowerCase().includes(query));
+      .filter(
+        (p) =>
+          !query ||
+          p.name.toLowerCase().includes(query) ||
+          p.client.toLowerCase().includes(query) ||
+          p.siteAddress.toLowerCase().includes(query)
+      );
   }, [search, statusFilter, isAdmin]);
 
   // Demo-level guard: must be signed in at all (real guard arrives Chunk 2).
   if (!role) return <Redirect href="/login" />;
 
   const manageComingSoon = (action) =>
-    Alert.alert(action, 'Project create/edit/deactivate connects to Firestore in Milestone 4.');
+    Alert.alert(action, 'Project create, edit and deactivate connect to Firestore in Milestone 4.');
+
+  const hasQuery = search.trim().length > 0 || statusFilter !== 'all';
 
   return (
     <View style={styles.page}>
@@ -55,38 +61,54 @@ export default function ProjectsScreen() {
         variant="page"
         title="Projects"
         subtitle={isAdmin ? 'All commercial projects owned by your company' : 'Active projects for your company'}
+        meta={`${visibleProjects.length} of ${projects.filter((p) => (isAdmin ? true : p.status === 'active')).length} shown`}
         right={<SignOutButton />}
       />
       <ScreenContainer>
         <View style={styles.controls}>
           <SearchBar value={search} onChangeText={setSearch} placeholder="Search projects, clients, sites…" testID="search-projects" />
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
+          <View style={styles.segmented}>
             {STATUS_FILTERS.map((f) => (
-              <Chip key={f.id} label={f.label} selected={statusFilter === f.id} onPress={() => setStatusFilter(f.id)} />
+              <Pressable
+                key={f.id}
+                onPress={() => setStatusFilter(f.id)}
+                style={[styles.segmentItem, statusFilter === f.id && styles.segmentItemActive]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: statusFilter === f.id }}
+                testID={`filter-${f.id}`}
+              >
+                <Text style={[styles.segmentLabel, statusFilter === f.id && styles.segmentLabelActive]}>{f.label}</Text>
+              </Pressable>
             ))}
-          </ScrollView>
+          </View>
         </View>
 
-        {isAdmin ? (
-          <Card style={styles.addCard}>
-            <ListRow title="＋ New Project" meta="Create a commercial project for your company" onPress={() => manageComingSoon('New project')} testID="row-new-project" />
-          </Card>
-        ) : null}
+        <View style={[styles.ledger, styles.ledgerTop]}>
+          {isAdmin ? (
+            <ListRow
+              first
+              title="New project"
+              meta="Create a commercial project for your company"
+              accent
+              onPress={() => manageComingSoon('New project')}
+              trailing={<Ionicons name="add" size={20} color={colors.textAccent} />}
+              testID="row-new-project"
+            />
+          ) : null}
 
-        {visibleProjects.length === 0 ? (
-          <Card style={styles.listCard}>
+          {visibleProjects.length === 0 ? (
             <EmptyState
-              title={search || statusFilter !== 'all' ? 'No projects match your search' : 'No projects yet'}
+              title={hasQuery ? 'No projects match your search' : 'No projects yet'}
               message={
-                search || statusFilter !== 'all'
+                hasQuery
                   ? 'Adjust or clear the search and filters to see more results.'
                   : isAdmin
                     ? 'Create your first commercial project to begin registering equipment.'
                     : 'Your administrator has not created any projects yet.'
               }
-              actionLabel={search || statusFilter !== 'all' ? 'Clear search & filters' : undefined}
+              actionLabel={hasQuery ? 'Clear search & filters' : undefined}
               onAction={
-                search || statusFilter !== 'all'
+                hasQuery
                   ? () => {
                       setSearch('');
                       setStatusFilter('all');
@@ -95,32 +117,53 @@ export default function ProjectsScreen() {
               }
               testID="empty-projects"
             />
-          </Card>
-        ) : (
-          <Card padded={false} style={styles.listCard}>
-            {visibleProjects.map((project, index) => (
+          ) : (
+            visibleProjects.map((project, index) => (
               <ListRow
                 key={project.id}
-                first={index === 0}
+                first={!isAdmin && index === 0}
                 title={project.name}
                 meta={`${project.client} · ${project.siteAddress}`}
                 meta2={`${units.filter((u) => u.projectId === project.id).length} registered units`}
-                badge={<StatusBadge label={project.status === 'active' ? 'Active' : 'Inactive'} tone={project.status === 'active' ? 'success' : 'neutral'} />}
+                badge={
+                  <StatusBadge
+                    label={project.status === 'active' ? 'Active' : 'Inactive'}
+                    tone={project.status === 'active' ? 'success' : 'neutral'}
+                  />
+                }
                 onPress={() => router.push(`/projects/${project.id}`)}
                 testID={`row-project-${project.id}`}
               />
-            ))}
-          </Card>
-        )}
+            ))
+          )}
+        </View>
       </ScreenContainer>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: colors.surfaceAlt },
+  page: { flex: 1, backgroundColor: colors.canvas },
   controls: { marginTop: spacing.lg },
-  chipRow: { marginTop: spacing.md },
-  addCard: { marginTop: spacing.md },
-  listCard: { marginTop: spacing.md },
+  segmented: {
+    flexDirection: 'row',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    borderRadius: radius.md,
+    padding: 3,
+    marginTop: spacing.md,
+  },
+  segmentItem: { flex: 1, paddingVertical: 7, borderRadius: radius.sm, alignItems: 'center' },
+  segmentItemActive: { backgroundColor: colors.navy900 },
+  segmentLabel: { fontFamily: fonts.medium, fontSize: typography.sizeCaption, color: colors.textSecondary },
+  segmentLabelActive: { color: colors.textInverse },
+  ledgerTop: { marginTop: spacing.md },
+  ledger: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    borderRadius: radius.lg,
+    overflow: 'hidden',
+  },
 });

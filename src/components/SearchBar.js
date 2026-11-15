@@ -5,12 +5,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { colors, radius, spacing, typography } from '../theme/theme';
+import { colors, fonts, radius, spacing, typography } from '../theme/theme';
 
 export default function SearchBar({ value, onChangeText, placeholder = 'Searchâ€¦', testID }) {
   return (
     <View style={styles.container}>
-      <Ionicons name="search" size={17} color={colors.textMuted} />
+      <Ionicons name="search" size={16} color={colors.textMuted} />
       <TextInput
         style={styles.input}
         value={value}
@@ -24,7 +24,7 @@ export default function SearchBar({ value, onChangeText, placeholder = 'Searchâ€
       />
       {value ? (
         <Pressable onPress={() => onChangeText('')} hitSlop={8} accessibilityRole="button" accessibilityLabel="Clear search">
-          <Ionicons name="close-circle" size={17} color={colors.textMuted} />
+          <Ionicons name="close-circle" size={16} color={colors.textMuted} />
         </Pressable>
       ) : null}
     </View>
@@ -37,13 +37,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.hairlineStrong,
     borderRadius: radius.md,
     paddingHorizontal: spacing.md,
     minHeight: 44,
   },
   input: {
     flex: 1,
+    fontFamily: fonts.regular,
     fontSize: typography.sizeBody,
     color: colors.textPrimary,
     paddingVertical: 10,

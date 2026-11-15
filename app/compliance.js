@@ -1,5 +1,5 @@
 /**
- * Compliance Attention screen — open attention cases for review.
+ * Compliance Attention screen — case files for administrative review.
  *
  * Scope (proposal §3.1 / §7): the app flags a limited, documented set of
  * conditions; uncertain records are labelled "Needs Admin Review".
@@ -16,15 +16,14 @@ import Button from '../src/components/Button';
 import Card from '../src/components/Card';
 import EmptyState from '../src/components/EmptyState';
 import ScreenContainer from '../src/components/ScreenContainer';
-import SectionHeader from '../src/components/SectionHeader';
 import SignOutButton from '../src/components/SignOutButton';
 import StatusBadge from '../src/components/StatusBadge';
 import TextField from '../src/components/TextField';
 import { useDemoSession } from '../src/context/DemoSessionContext';
 import { attentionCases, projectsById, technicians, unitsById } from '../src/data/sampleData';
-import { colors, radius, spacing, typography } from '../src/theme/theme';
+import { colors, fonts, radius, spacing, typography } from '../src/theme/theme';
 
-const SEVERITY_TONE = { danger: 'danger', warning: 'warning', info: 'info' };
+const SEVERITY_COLORS = { danger: colors.danger, warning: colors.warning, info: colors.info };
 
 export default function ComplianceScreen() {
   const router = useRouter();
@@ -78,18 +77,18 @@ export default function ComplianceScreen() {
     <View style={styles.page}>
       <AppHeader
         variant="page"
-        title="Compliance Attention"
-        subtitle="Possible attention items from stored records — for administrative review"
-        badgeLabel={isAdmin ? 'ADMIN REVIEW' : 'READ ONLY'}
+        title="Compliance attention"
+        subtitle="Possible attention items from stored records, for administrative review"
+        meta={`${openCases.length} open · ${resolvedCases.length} resolved`}
         right={<SignOutButton />}
       />
       <ScreenContainer>
-        {/* Scope notice — honest about the supported limits */}
-        <View style={styles.notice}>
-          <Text style={styles.noticeTitle}>Limited, documented checks only</Text>
-          <Text style={styles.noticeText}>
+        {/* Support scope — the limits, stated plainly */}
+        <View style={styles.scope}>
+          <Text style={styles.scopeLabel}>Support scope</Text>
+          <Text style={styles.scopeText}>
             Cases are raised from a small predefined set of conditions. If information is missing or a record falls
-            outside the supported scenario, it is labelled <Text style={styles.noticeStrong}>Needs Admin Review</Text>.
+            outside the supported scenario, it is labelled <Text style={styles.scopeStrong}>Needs Admin Review</Text>.
             This app is a recordkeeping and review aid — not an EPA-approved system.
           </Text>
         </View>
@@ -97,9 +96,7 @@ export default function ComplianceScreen() {
         {/* Tabs */}
         <View style={styles.tabs}>
           <Pressable style={[styles.tab, activeTab === 'open' && styles.tabActive]} onPress={() => setActiveTab('open')} testID="tab-open">
-            <Text style={[styles.tabLabel, activeTab === 'open' && styles.tabLabelActive]}>
-              Open & review ({openCases.length})
-            </Text>
+            <Text style={[styles.tabLabel, activeTab === 'open' && styles.tabLabelActive]}>Open ({openCases.length})</Text>
           </Pressable>
           <Pressable style={[styles.tab, activeTab === 'resolved' && styles.tabActive]} onPress={() => setActiveTab('resolved')} testID="tab-resolved">
             <Text style={[styles.tabLabel, activeTab === 'resolved' && styles.tabLabelActive]}>Resolved ({resolvedCases.length})</Text>
@@ -107,42 +104,36 @@ export default function ComplianceScreen() {
         </View>
 
         {shown.length === 0 ? (
-          <Card style={styles.listCard}>
+          <View style={styles.ledger}>
             <EmptyState
               title={activeTab === 'open' ? 'No open attention cases' : 'No resolved cases yet'}
               message={
                 activeTab === 'open'
-                  ? 'Everything is reviewed. New cases appear automatically when a record meets a supported attention condition.'
-                  : 'Cases you resolve with a recorded reason will be kept here with their full history.'
+                  ? 'Everything is reviewed. New cases appear when a record meets a supported attention condition.'
+                  : 'Cases you resolve with a recorded reason are kept here with their full history.'
               }
               testID="empty-compliance"
             />
-          </Card>
+          </View>
         ) : (
           shown.map((item) => {
             const unit = unitsById[item.unitId];
             const project = projectsById[item.projectId];
-            const statusLabel =
-              item.status === 'resolved'
-                ? 'Resolved'
-                : item.status === 'needs_review'
-                  ? 'Needs Admin Review'
-                  : 'Open';
-            const tone = item.status === 'resolved' ? 'success' : SEVERITY_TONE[item.severity] ?? 'warning';
+            const statusLabel = item.status === 'resolved' ? 'Resolved' : item.status === 'needs_review' ? 'Needs Admin Review' : 'Open';
+            const tone = item.status === 'resolved' ? 'success' : item.severity ?? 'warning';
 
             return (
-              <Card key={item.id} style={styles.caseCard} testID={`case-${item.id}`}>
+              <Card key={item.id} style={[styles.caseFile, { borderLeftColor: SEVERITY_COLORS[item.severity] ?? colors.warning }]} testID={`case-${item.id}`}>
                 <View style={styles.caseHead}>
-                  <View style={[styles.severityBar, { backgroundColor: tone === 'danger' ? colors.danger : tone === 'info' ? colors.info : colors.warning }]} />
-                  <View style={styles.caseHeadBody}>
-                    <Text style={styles.caseTitle}>{item.title}</Text>
-                    <Text style={styles.caseMeta}>
-                      {item.unitId} · {unit?.serialNumber ?? ''} · {project?.name ?? ''}
-                    </Text>
-                  </View>
+                  <Text style={styles.caseRef}>{item.id}</Text>
                   <StatusBadge label={statusLabel} tone={tone} />
                 </View>
-
+                <Text style={styles.caseTitle}>{item.title}</Text>
+                <Text style={styles.caseMeta}>
+                  <Text style={styles.caseMetaMono}>{item.unitId}</Text>
+                  {unit ? `  ${unit.serialNumber}` : ''}
+                </Text>
+                <Text style={styles.caseProject}>{project?.name ?? ''}</Text>
                 <Text style={styles.caseReason}>{item.reason}</Text>
                 <Text style={styles.caseDate}>Raised {item.createdAt}</Text>
 
@@ -174,7 +165,6 @@ export default function ComplianceScreen() {
           })
         )}
 
-        <SectionHeader title="History is preserved" />
         <Text style={styles.historyNote}>
           Resolved cases keep their original reason, the administrator’s decision and the date — closing a case never
           deletes it.
@@ -211,53 +201,87 @@ export default function ComplianceScreen() {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: colors.surfaceAlt },
-  notice: {
-    backgroundColor: colors.infoBg,
+  page: { flex: 1, backgroundColor: colors.canvas },
+  scope: {
+    marginTop: spacing.lg,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#C9DEF8',
+    borderColor: colors.hairline,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+  },
+  scopeLabel: {
+    fontFamily: fonts.monoMedium,
+    fontSize: typography.sizeMeta,
+    letterSpacing: 1,
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    marginBottom: spacing.xs,
+  },
+  scopeText: { fontFamily: fonts.regular, fontSize: typography.sizeCaption, color: colors.textSecondary, lineHeight: 17 },
+  scopeStrong: { fontFamily: fonts.medium, color: colors.warning },
+  tabs: {
+    flexDirection: 'row',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.hairline,
     borderRadius: radius.md,
-    padding: spacing.md + 2,
+    padding: 3,
     marginTop: spacing.lg,
   },
-  noticeTitle: { fontSize: typography.sizeCaption, fontWeight: typography.bold, color: colors.info, marginBottom: spacing.xs },
-  noticeText: { fontSize: typography.sizeCaption, color: colors.textSecondary, lineHeight: typography.leadingNormal },
-  noticeStrong: { fontWeight: typography.bold, color: colors.warning },
-  tabs: { flexDirection: 'row', backgroundColor: colors.surfaceSunken, borderRadius: radius.md, padding: 3, marginTop: spacing.lg },
-  tab: { flex: 1, paddingVertical: 9, borderRadius: radius.sm, alignItems: 'center' },
-  tabActive: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  tabLabel: { fontSize: typography.sizeCaption, fontWeight: typography.semibold, color: colors.textSecondary },
-  tabLabelActive: { color: colors.navy800 },
-  listCard: { marginTop: spacing.lg },
-  caseCard: { marginTop: spacing.md },
-  caseHead: { flexDirection: 'row', alignItems: 'flex-start' },
-  severityBar: { width: 4, alignSelf: 'stretch', borderRadius: 2, marginRight: spacing.md, minHeight: 40 },
-  caseHeadBody: { flex: 1, paddingRight: spacing.sm },
-  caseTitle: { fontSize: typography.sizeBody, fontWeight: typography.semibold, color: colors.textPrimary },
-  caseMeta: { fontSize: typography.sizeCaption, color: colors.textMuted, marginTop: 3 },
-  caseReason: { fontSize: typography.sizeBodySmall, color: colors.textSecondary, lineHeight: typography.leadingNormal, marginTop: spacing.md },
-  caseDate: { fontSize: typography.sizeCaption, color: colors.textMuted, marginTop: spacing.sm },
+  tab: { flex: 1, paddingVertical: 8, borderRadius: radius.sm, alignItems: 'center' },
+  tabActive: { backgroundColor: colors.navy900 },
+  tabLabel: { fontFamily: fonts.medium, fontSize: typography.sizeCaption, color: colors.textSecondary },
+  tabLabelActive: { color: colors.textInverse },
+  caseFile: { marginTop: spacing.md, borderLeftWidth: 3 },
+  caseHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
+  caseRef: {
+    fontFamily: fonts.monoMedium,
+    fontSize: typography.sizeCaption,
+    color: colors.textMuted,
+    letterSpacing: 0.6,
+    fontVariant: ['tabular-nums'],
+  },
+  caseTitle: { fontFamily: fonts.medium, fontSize: typography.sizeBodyLarge, color: colors.textPrimary, letterSpacing: -0.1, marginTop: spacing.sm, lineHeight: 21 },
+  caseMeta: { fontFamily: fonts.regular, fontSize: typography.sizeCaption, color: colors.textMuted, marginTop: spacing.xs },
+  caseMetaMono: { fontFamily: fonts.monoMedium, color: colors.textSecondary, letterSpacing: 0.2 },
+  caseProject: { fontFamily: fonts.regular, fontSize: typography.sizeCaption, color: colors.textMuted, marginTop: 2 },
+  caseReason: { fontFamily: fonts.regular, fontSize: typography.sizeBodySmall, color: colors.textSecondary, lineHeight: 18, marginTop: spacing.sm },
+  caseDate: {
+    fontFamily: fonts.mono,
+    fontSize: typography.sizeMeta,
+    color: colors.textMuted,
+    letterSpacing: 0.4,
+    marginTop: spacing.sm,
+    textTransform: 'uppercase',
+  },
   resolutionBox: {
     backgroundColor: colors.successBg,
     borderRadius: radius.md,
     padding: spacing.md,
     marginTop: spacing.md,
   },
-  resolutionLabel: { fontSize: typography.sizeOverline, fontWeight: typography.bold, color: colors.success, letterSpacing: 0.5, textTransform: 'uppercase' },
-  resolutionText: { fontSize: typography.sizeCaption, color: colors.textSecondary, marginTop: spacing.xs, lineHeight: typography.leadingNormal },
+  resolutionLabel: { fontFamily: fonts.medium, fontSize: typography.sizeCaption, color: colors.success },
+  resolutionText: { fontFamily: fonts.regular, fontSize: typography.sizeCaption, color: colors.textSecondary, marginTop: spacing.xs, lineHeight: 17 },
   caseActions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.lg },
   caseAction: { flex: 1 },
-  readonlyNote: { fontSize: typography.sizeCaption, color: colors.textMuted, marginTop: spacing.md, fontStyle: 'italic' },
-  historyNote: { fontSize: typography.sizeBodySmall, color: colors.textSecondary, lineHeight: typography.leadingRelaxed },
+  readonlyNote: { fontFamily: fonts.regular, fontSize: typography.sizeCaption, color: colors.textMuted, marginTop: spacing.md },
+  historyNote: {
+    fontFamily: fonts.regular,
+    fontSize: typography.sizeCaption,
+    color: colors.textMuted,
+    lineHeight: 17,
+    marginTop: spacing.xl,
+  },
   scrim: { flex: 1, backgroundColor: colors.scrim, justifyContent: 'flex-end' },
   sheet: {
     backgroundColor: colors.surface,
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
     padding: spacing.xl,
   },
-  sheetTitle: { fontSize: typography.sizeBodyLarge, fontWeight: typography.bold, color: colors.textPrimary },
-  sheetSubtitle: { fontSize: typography.sizeBodySmall, color: colors.textSecondary, marginTop: spacing.xs, marginBottom: spacing.lg },
+  sheetTitle: { fontFamily: fonts.medium, fontSize: typography.sizeBodyLarge, color: colors.textPrimary },
+  sheetSubtitle: { fontFamily: fonts.regular, fontSize: typography.sizeBodySmall, color: colors.textSecondary, marginTop: spacing.xs, marginBottom: spacing.lg },
   sheetActions: { flexDirection: 'row', gap: spacing.md },
   sheetAction: { flex: 1 },
 });

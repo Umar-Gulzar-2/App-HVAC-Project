@@ -1,16 +1,17 @@
 /**
- * ErrorState — shown when a load or request fails. Always offers Retry.
- * The app never silently shows incomplete data as if it were current.
+ * ErrorState — plain-language failure notice with Retry.
+ * Never shows incomplete data as if it were current.
  */
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { colors, spacing, typography } from '../theme/theme';
+import { colors, fonts, spacing, typography } from '../theme/theme';
 import Button from './Button';
 
-export default function ErrorState({ message = 'Something went wrong while loading data.', onRetry, testID }) {
+export default function ErrorState({ title = 'Couldn’t load this screen', message = 'Something went wrong while loading data.', onRetry, testID }) {
   return (
     <View style={styles.container} testID={testID}>
-      <Text style={styles.title}>Couldn’t load this screen</Text>
+      <View style={styles.rule} />
+      <Text style={styles.title}>{title}</Text>
       <Text style={styles.message}>{message}</Text>
       {onRetry ? <Button label="Retry" onPress={onRetry} variant="secondary" size="sm" style={styles.action} /> : null}
     </View>
@@ -18,14 +19,15 @@ export default function ErrorState({ message = 'Something went wrong while loadi
 }
 
 const styles = StyleSheet.create({
-  container: { alignItems: 'center', paddingVertical: spacing.xxl, paddingHorizontal: spacing.xl },
-  title: { fontSize: typography.sizeBodyLarge, fontWeight: typography.semibold, color: colors.textPrimary },
+  container: { paddingVertical: spacing.xl, paddingHorizontal: spacing.lg },
+  rule: { width: 24, height: 2, backgroundColor: colors.danger, marginBottom: spacing.md, opacity: 0.7 },
+  title: { fontFamily: fonts.medium, fontSize: typography.sizeBodyLarge, color: colors.textPrimary },
   message: {
+    fontFamily: fonts.regular,
     fontSize: typography.sizeBodySmall,
     color: colors.textSecondary,
-    textAlign: 'center',
-    marginTop: spacing.sm,
-    lineHeight: typography.leadingRelaxed,
+    marginTop: spacing.xs,
+    lineHeight: 19,
   },
-  action: { marginTop: spacing.lg },
+  action: { marginTop: spacing.lg, alignSelf: 'flex-start' },
 });

@@ -1,15 +1,13 @@
 /**
- * Card — a restrained white surface with hairline border.
- * Used sparingly: stat tiles, identity blocks, list groupings — not wrapped
- * around every element on a screen.
+ * Card — a single ruled surface (hairline border, no shadow).
+ * Used sparingly: spec sheets, case files, modal sheets.
+ * Lists do NOT live in cards — they use flush ledger rows.
  */
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { borders, colors, elevation, radius, spacing } from '../theme/theme';
+import { colors, radius, spacing } from '../theme/theme';
 
 export default function Card({ children, onPress, style, padded = true, testID }) {
-  const content = <View style={[styles.card, padded && styles.padded, style]}>{children}</View>;
-
   if (onPress) {
     return (
       <Pressable
@@ -22,17 +20,20 @@ export default function Card({ children, onPress, style, padded = true, testID }
       </Pressable>
     );
   }
-  return <View testID={testID}>{content}</View>;
+  return (
+    <View style={[styles.card, padded && styles.padded, style]} testID={testID}>
+      {children}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
-    borderWidth: borders.hairline,
-    borderColor: colors.border,
-    ...elevation.low,
+    borderWidth: 1,
+    borderColor: colors.hairline,
   },
   padded: { padding: spacing.lg },
-  pressed: { backgroundColor: colors.surfaceAlt },
+  pressed: { backgroundColor: colors.canvas },
 });

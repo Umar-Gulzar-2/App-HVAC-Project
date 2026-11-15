@@ -1,27 +1,33 @@
 /**
  * Technician Service Form — record work performed on a registered unit.
  *
- * Flow: select project → select unit → choose service type → enter work
- * details. Required fields depend on the selected service type
- * (proposal requirement). Submitting validates the form; persistence to
- * Firestore arrives in Chunk 6 — this preview stores nothing yet.
+ * Numbered sections (01–03) follow the real sequence of the task:
+ * equipment → service type → work details. Required fields depend on the
+ * selected service type (proposal requirement). Submitting validates the
+ * form; persistence to Firestore arrives in Chunk 6 — nothing is stored yet.
  *
  * Optional param: ?unitId=ACU-… preselects the unit (from Unit Details).
  */
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { Alert, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import ActionBar from '../../src/components/ActionBar';
 import AppHeader from '../../src/components/AppHeader';
-import Button from '../../src/components/Button';
-import Card from '../../src/components/Card';
 import ScreenContainer from '../../src/components/ScreenContainer';
 import SignOutButton from '../../src/components/SignOutButton';
 import TextField from '../../src/components/TextField';
 import { useDemoSession } from '../../src/context/DemoSessionContext';
 import { acModelsById, projects, units } from '../../src/data/sampleData';
-import { colors, radius, spacing, typography } from '../../src/theme/theme';
+import { colors, fonts, radius, spacing, typography } from '../../src/theme/theme';
 
-const SERVICE_TYPES = ['Installation', 'Repair', 'Maintenance', 'Refrigerant Service', 'Replacement'];
+const SERVICE_TYPES = [
+  { name: 'Installation', icon: 'construct-outline' },
+  { name: 'Repair', icon: 'build-outline' },
+  { name: 'Maintenance', icon: 'medkit-outline' },
+  { name: 'Refrigerant Service', icon: 'snow-outline' },
+  { name: 'Replacement', icon: 'swap-horizontal-outline' },
+];
 
 const WORK_PLACEHOLDERS = {
   Installation: 'Describe the installation or commissioning work performed…',
@@ -33,6 +39,17 @@ const WORK_PLACEHOLDERS = {
 
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
+}
+
+/** Section heading: mono sequence number + sentence-case name. */
+function FormSection({ index, title, count }) {
+  return (
+    <View style={styles.sectionHead}>
+      <Text style={styles.sectionIndex}>{index}</Text>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      {count ? <Text style={styles.sectionCount}>{count}</Text> : null}
+    </View>
+  );
 }
 
 export default function ServiceFormScreen() {
@@ -111,13 +128,15 @@ export default function ServiceFormScreen() {
     <View style={styles.page}>
       <AppHeader
         variant="page"
-        title="Service Record"
-        subtitle="Record installation, repair, maintenance, refrigerant or replacement work"
+        title="Service record"
+        subtitle="Installation, repair, maintenance, refrigerant or replacement work"
+        meta="Preview · not saved yet"
         right={<SignOutButton />}
       />
-      <ScreenContainer>
-        {/* Selectors */}
-        <Card style={styles.section}>
+      <ScreenContainer contentStyle={styles.content}>
+        {/* 01 — Equipment */}
+        <FormSection index="01" title="Equipment" />
+        <View style={styles.block}>
           <Pressable style={styles.selector} onPress={() => setPicker('project')} testID="select-project">
             <View style={styles.selectorBody}>
               <Text style={styles.selectorLabel}>Project</Text>
@@ -125,7 +144,7 @@ export default function ServiceFormScreen() {
                 {selectedProject ? selectedProject.name : 'Select a project…'}
               </Text>
             </View>
-            <Text style={styles.chevron}>▾</Text>
+            <Ionicons name="chevron-down" size={16} color={colors.textMuted} />
           </Pressable>
           {errors.projectId ? <Text style={styles.error}>{errors.projectId}</Text> : null}
 
@@ -138,45 +157,51 @@ export default function ServiceFormScreen() {
             testID="select-unit"
           >
             <View style={styles.selectorBody}>
-              <Text style={styles.selectorLabel}>AC Unit</Text>
+              <Text style={styles.selectorLabel}>AC unit</Text>
               <Text style={[styles.selectorValue, !selectedUnit && styles.selectorPlaceholder]}>
                 {selectedUnit ? `${selectedUnit.id} · ${selectedUnit.serialNumber}` : projectId ? 'Select a unit…' : 'Choose a project first'}
               </Text>
             </View>
-            <Text style={styles.chevron}>▾</Text>
+            <Ionicons name="chevron-down" size={16} color={colors.textMuted} />
           </Pressable>
           {errors.unitId ? <Text style={styles.error}>{errors.unitId}</Text> : null}
 
           {selectedUnit ? (
             <Text style={styles.unitMeta}>
-              {selectedModel?.manufacturer} {selectedModel?.modelNumber} · {selectedUnit.refrigerantType} · full charge {selectedUnit.fullChargeLbs} lbs
+              {selectedModel?.manufacturer} {selectedModel?.modelNumber} · {selectedUnit.refrigerantType} · full charge{' '}
+              {selectedUnit.fullChargeLbs} lbs
             </Text>
           ) : null}
-        </Card>
+        </View>
 
-        {/* Service type */}
-        <Text style={styles.groupLabel}>Service type</Text>
+        {/* 02 — Service type */}
+        <FormSection index="02" title="Service type" />
         <View style={styles.typeGrid}>
-          {SERVICE_TYPES.map((type) => (
-            <Pressable
-              key={type}
-              onPress={() => {
-                setServiceType(type);
-                setErrors((e) => ({ ...e, serviceType: undefined }));
-              }}
-              style={[styles.typeChip, serviceType === type && styles.typeChipActive]}
-              accessibilityRole="button"
-              accessibilityState={{ selected: serviceType === type }}
-              testID={`type-${type}`}
-            >
-              <Text style={[styles.typeLabel, serviceType === type && styles.typeLabelActive]}>{type}</Text>
-            </Pressable>
-          ))}
+          {SERVICE_TYPES.map((type) => {
+            const selected = serviceType === type.name;
+            return (
+              <Pressable
+                key={type.name}
+                onPress={() => {
+                  setServiceType(type.name);
+                  setErrors((e) => ({ ...e, serviceType: undefined }));
+                }}
+                style={[styles.typeTile, selected && styles.typeTileActive]}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                testID={`type-${type.name}`}
+              >
+                <Ionicons name={type.icon} size={18} color={selected ? colors.textInverse : colors.textSecondary} />
+                <Text style={[styles.typeLabel, selected && styles.typeLabelActive]}>{type.name}</Text>
+              </Pressable>
+            );
+          })}
         </View>
         {errors.serviceType ? <Text style={styles.error}>{errors.serviceType}</Text> : null}
 
-        {/* Work details */}
-        <View style={styles.formBlock}>
+        {/* 03 — Work details */}
+        <FormSection index="03" title="Work details" />
+        <View style={styles.block}>
           <TextField label="Service date (YYYY-MM-DD)" value={serviceDate} onChangeText={setServiceDate} error={errors.serviceDate} testID="input-date" />
           <TextField
             label="Work performed"
@@ -217,15 +242,16 @@ export default function ServiceFormScreen() {
             label={needsLeakFields ? 'Test notes (optional)' : 'Notes (optional)'}
             value={testNotes}
             onChangeText={setTestNotes}
-            placeholder="Pressure/vacuum test results, readings, follow-up needed…"
+            placeholder="Pressure or vacuum test results, readings, follow-up needed…"
             multiline
             testID="input-notes"
           />
         </View>
 
-        <Button label="Save Service Record" size="lg" onPress={handleSubmit} loading={saving} testID="btn-save-service" />
-        <Text style={styles.previewNote}>Preview build — validation works; Firestore saving connects in Milestone 6.</Text>
+        <Text style={styles.previewNote}>Validation runs locally — Firestore saving connects in Milestone 6</Text>
       </ScreenContainer>
+
+      <ActionBar label="Save service record" onPress={handleSubmit} loading={saving} testID="btn-save-service" />
 
       {/* Simple selection modal (project / unit) */}
       <Modal visible={picker !== null} transparent animationType="fade" onRequestClose={() => setPicker(null)}>
@@ -250,13 +276,12 @@ export default function ServiceFormScreen() {
                     }}
                     testID={`option-unit-${u.id}`}
                   >
-                    <Text style={styles.sheetItemText}>{u.id}</Text>
+                    <Text style={styles.sheetItemTextMono}>{u.id}</Text>
                     <Text style={styles.sheetItemMeta}>
                       {u.serialNumber} · {acModelsById[u.modelId]?.manufacturer} {acModelsById[u.modelId]?.modelNumber}
                     </Text>
                   </Pressable>
                 ))}
-            <Button label="Close" variant="ghost" onPress={() => setPicker(null)} style={styles.sheetClose} />
           </Pressable>
         </Pressable>
       </Modal>
@@ -265,54 +290,73 @@ export default function ServiceFormScreen() {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: colors.surfaceAlt },
-  section: { marginTop: spacing.lg },
-  selector: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm },
+  page: { flex: 1, backgroundColor: colors.canvas },
+  content: { paddingTop: spacing.lg },
+  sectionHead: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.sm, marginTop: spacing.xl, marginBottom: spacing.sm },
+  sectionIndex: { fontFamily: fonts.monoMedium, fontSize: typography.sizeCaption, color: colors.textAccent, letterSpacing: 0.5 },
+  sectionTitle: { fontFamily: fonts.medium, fontSize: typography.sizeBody, color: colors.textPrimary, letterSpacing: -0.1 },
+  sectionCount: { fontFamily: fonts.mono, fontSize: typography.sizeCaption, color: colors.textMuted, marginLeft: 'auto' },
+  block: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xs,
+  },
+  selector: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm, minHeight: 48 },
   selectorDisabled: { opacity: 0.55 },
-  selectorBody: { flex: 1 },
-  selectorLabel: { fontSize: typography.sizeOverline, fontWeight: typography.semibold, color: colors.textMuted, letterSpacing: 0.6, textTransform: 'uppercase' },
-  selectorValue: { fontSize: typography.sizeBody, fontWeight: typography.medium, color: colors.textPrimary, marginTop: 3 },
-  selectorPlaceholder: { color: colors.textMuted, fontWeight: typography.regular },
-  selectorDivider: { height: 1, backgroundColor: colors.border, marginVertical: spacing.sm },
-  chevron: { fontSize: 16, color: colors.textMuted, paddingLeft: spacing.md },
-  error: { fontSize: typography.sizeCaption, color: colors.danger, marginTop: spacing.xs },
-  unitMeta: { fontSize: typography.sizeCaption, color: colors.textSecondary, marginTop: spacing.sm },
-  groupLabel: {
-    fontSize: typography.sizeOverline,
-    fontWeight: typography.bold,
-    letterSpacing: 1.2,
+  selectorBody: { flex: 1, paddingRight: spacing.sm },
+  selectorLabel: {
+    fontFamily: fonts.monoMedium,
+    fontSize: typography.sizeMeta,
+    letterSpacing: 0.8,
     color: colors.textMuted,
     textTransform: 'uppercase',
-    marginTop: spacing.xl,
-    marginBottom: spacing.md,
   },
+  selectorValue: { fontFamily: fonts.medium, fontSize: typography.sizeBody, color: colors.textPrimary, marginTop: 3 },
+  selectorPlaceholder: { fontFamily: fonts.regular, color: colors.textMuted },
+  selectorDivider: { height: 1, backgroundColor: colors.hairline },
+  error: { fontFamily: fonts.regular, fontSize: typography.sizeCaption, color: colors.danger, marginTop: spacing.xs, marginBottom: spacing.xs },
+  unitMeta: { fontFamily: fonts.regular, fontSize: typography.sizeCaption, color: colors.textSecondary, paddingVertical: spacing.sm, lineHeight: 16 },
   typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  typeChip: {
+  typeTile: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.borderStrong,
+    borderColor: colors.hairlineStrong,
     backgroundColor: colors.surface,
-    borderRadius: radius.pill,
+    borderRadius: radius.md,
     paddingHorizontal: spacing.md,
-    paddingVertical: 8,
-    minHeight: 36,
-    justifyContent: 'center',
+    paddingVertical: 10,
+    minHeight: 44,
+    flexGrow: 1,
+    minWidth: '47%',
   },
-  typeChipActive: { backgroundColor: colors.navy800, borderColor: colors.navy800 },
-  typeLabel: { fontSize: typography.sizeCaption, fontWeight: typography.medium, color: colors.textSecondary },
-  typeLabelActive: { color: colors.textInverse, fontWeight: typography.semibold },
-  formBlock: { marginTop: spacing.xl },
-  previewNote: { fontSize: typography.sizeCaption, color: colors.textMuted, textAlign: 'center', marginTop: spacing.md },
+  typeTileActive: { backgroundColor: colors.navy900, borderColor: colors.navy900 },
+  typeLabel: { fontFamily: fonts.medium, fontSize: typography.sizeCaption, color: colors.textSecondary, flexShrink: 1 },
+  typeLabelActive: { color: colors.textInverse },
+  previewNote: {
+    fontFamily: fonts.mono,
+    fontSize: typography.sizeMeta,
+    letterSpacing: 0.5,
+    color: colors.textMuted,
+    textAlign: 'center',
+    marginTop: spacing.xl,
+    textTransform: 'uppercase',
+  },
   scrim: { flex: 1, backgroundColor: colors.scrim, justifyContent: 'flex-end' },
   sheet: {
     backgroundColor: colors.surface,
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
     padding: spacing.xl,
     maxHeight: '75%',
   },
-  sheetTitle: { fontSize: typography.sizeBodyLarge, fontWeight: typography.bold, color: colors.textPrimary, marginBottom: spacing.md },
-  sheetItem: { paddingVertical: spacing.md, borderTopWidth: 1, borderTopColor: colors.border },
-  sheetItemText: { fontSize: typography.sizeBody, fontWeight: typography.semibold, color: colors.textPrimary },
-  sheetItemMeta: { fontSize: typography.sizeCaption, color: colors.textSecondary, marginTop: 2 },
-  sheetClose: { marginTop: spacing.md },
+  sheetTitle: { fontFamily: fonts.medium, fontSize: typography.sizeBodyLarge, color: colors.textPrimary, marginBottom: spacing.sm },
+  sheetItem: { paddingVertical: spacing.md, borderTopWidth: 1, borderTopColor: colors.hairline },
+  sheetItemText: { fontFamily: fonts.medium, fontSize: typography.sizeBody, color: colors.textPrimary },
+  sheetItemTextMono: { fontFamily: fonts.monoMedium, fontSize: typography.sizeBody, color: colors.textPrimary, letterSpacing: 0.2 },
+  sheetItemMeta: { fontFamily: fonts.regular, fontSize: typography.sizeCaption, color: colors.textMuted, marginTop: 2 },
 });
