@@ -9,6 +9,9 @@ dist/
 web-build/
 expo-env.d.ts
 
+# downloadable preview artifact (not source)
+HVAC-Comply-Web-Preview.zip
+
 # Native
 .kotlin/
 *.orig.*
