@@ -14,14 +14,24 @@
  *    action.
  */
 
-/* ---- Font families (loaded in app/_layout.js; weight is in the name) ---- */
+import { Platform } from 'react-native';
+
+/* ---- Font families (loaded in app/_layout.js; weight is in the name) ----
+ * On web each family carries an explicit fallback stack: if the Plex file
+ * is slow or blocked, text renders in a clean system sans/mono — never the
+ * browser's Times serif default. Native keeps the exact family name. */
+const sansFallback = 'system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+const monoFallback = 'ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace';
+
+const family = (name, fallback) => (Platform.OS === 'web' ? `${name}, ${fallback}` : name);
+
 export const fonts = {
-  regular: 'IBMPlexSans_400Regular',
-  medium: 'IBMPlexSans_500Medium',
-  semibold: 'IBMPlexSans_600SemiBold',
-  mono: 'IBMPlexMono_400Regular',
-  monoMedium: 'IBMPlexMono_500Medium',
-  monoSemibold: 'IBMPlexMono_600SemiBold',
+  regular: family('IBMPlexSans_400Regular', sansFallback),
+  medium: family('IBMPlexSans_500Medium', sansFallback),
+  semibold: family('IBMPlexSans_600SemiBold', sansFallback),
+  mono: family('IBMPlexMono_400Regular', monoFallback),
+  monoMedium: family('IBMPlexMono_500Medium', monoFallback),
+  monoSemibold: family('IBMPlexMono_600SemiBold', monoFallback),
 };
 
 export const colors = {
