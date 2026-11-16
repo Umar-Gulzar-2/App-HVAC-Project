@@ -21,7 +21,7 @@ import StatusBadge from '../src/components/StatusBadge';
 import TextField from '../src/components/TextField';
 import { useDemoSession } from '../src/context/DemoSessionContext';
 import { attentionCases, projectsById, technicians, unitsById } from '../src/data/sampleData';
-import { colors, fonts, radius, spacing, typography } from '../src/theme/theme';
+import { colors, fonts, radius, shadows, spacing, typography } from '../src/theme/theme';
 
 const SEVERITY_COLORS = { danger: colors.danger, warning: colors.warning, info: colors.info };
 
@@ -230,9 +230,9 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
   },
   tab: { flex: 1, paddingVertical: 8, borderRadius: radius.sm, alignItems: 'center' },
-  tabActive: { backgroundColor: colors.navy900 },
+  tabActive: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.hairlineStrong },
   tabLabel: { fontFamily: fonts.medium, fontSize: typography.sizeCaption, color: colors.textSecondary },
-  tabLabelActive: { color: colors.textInverse },
+  tabLabelActive: { color: colors.textPrimary },
   caseFile: { marginTop: spacing.md, borderLeftWidth: 3 },
   caseHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
   caseRef: {
@@ -279,6 +279,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     padding: spacing.xl,
+    ...shadows.sheet,
   },
   sheetTitle: { fontFamily: fonts.medium, fontSize: typography.sizeBodyLarge, color: colors.textPrimary },
   sheetSubtitle: { fontFamily: fonts.regular, fontSize: typography.sizeBodySmall, color: colors.textSecondary, marginTop: spacing.xs, marginBottom: spacing.lg },

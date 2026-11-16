@@ -1,11 +1,12 @@
 /**
  * ActionBar — sticky bottom action footer (the app-like form pattern):
- * hairline top edge, safe-area padding, one primary action.
+ * hairline top edge, floating-layer shadow, safe-area padding, one primary
+ * action.
  */
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, spacing } from '../theme/theme';
+import { colors, shadows, spacing } from '../theme/theme';
 import Button from './Button';
 
 export default function ActionBar({ label, onPress, loading = false, secondaryLabel, onSecondaryPress, testID }) {
@@ -30,6 +31,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderTopWidth: 1,
     borderTopColor: colors.hairline,
+    ...shadows.bar,
   },
   primary: { flex: 1 },
   secondary: { flex: 1 },

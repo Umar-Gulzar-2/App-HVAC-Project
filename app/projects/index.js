@@ -155,9 +155,9 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   segmentItem: { flex: 1, paddingVertical: 7, borderRadius: radius.sm, alignItems: 'center' },
-  segmentItemActive: { backgroundColor: colors.navy900 },
+  segmentItemActive: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.hairlineStrong },
   segmentLabel: { fontFamily: fonts.medium, fontSize: typography.sizeCaption, color: colors.textSecondary },
-  segmentLabelActive: { color: colors.textInverse },
+  segmentLabelActive: { color: colors.textPrimary },
   ledgerTop: { marginTop: spacing.md },
   ledger: {
     backgroundColor: colors.surface,

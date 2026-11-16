@@ -1,17 +1,22 @@
 /**
- * HVAC Comply design tokens — v2 (redesign).
+ * HVAC Comply design tokens — v3 (premium light SaaS).
  *
- * Direction (written before coding, derived from the product):
- * 1. An operations ledger for commercial HVAC equipment — flat white records
- *    on a cool canvas, separated by hairlines. Rules, not boxes.
- * 2. IBM Plex Sans for language, IBM Plex Mono for every identifier, serial,
- *    date and figure — tabular numerals, weights 400–600 only; hierarchy
- *    comes from size and color, not boldness.
- * 3. Deep navy is reserved for headers and chrome; one blue for interactive;
- *    green/amber/red used only for status — never decoration.
- * 4. Sentence-case copy that names real context. No greetings, no hype.
- * 5. Dense, left-aligned rows on a 4px grid; icons only where they label an
- *    action.
+ * Direction (research-first; sources: Stripe/Linear/Vercel craft writeups,
+ * frontend-design-saas light-mode tokens, light-theme design guides):
+ * 1. Light by default: cool off-white canvas (#F8FAFC), white surfaces that
+ *    lift off it with 1px hairlines — depth from tint shifts, not decoration.
+ * 2. Ink, not black: primary text is deep navy (#0F1E30) — Stripe's
+ *    navy-not-black rule — on white for editorial calm and AA contrast.
+ * 3. One interactive accent (#1D6FD1) earns buttons, links, focus rings and
+ *    selected states; its soft tint (#EDF4FC) fills selected surfaces.
+ *    Green/amber/red appear only as soft status tints — never decoration.
+ * 4. IBM Plex Sans (language) + IBM Plex Mono (identifiers, dates, figures,
+ *    tabular). Hierarchy from size and color; weights 400–600 only.
+ * 5. Shadows are reserved for genuinely floating layers (bottom sheets,
+ *    sticky action bar, the login card) — tight, low, single-direction.
+ *    Content cards stay flat: white + hairline.
+ * 6. Sentence-case copy on a 4px grid; radius 6–12 (never pill buttons —
+ *    pills belong to status tags only).
  */
 
 import { Platform } from 'react-native';
@@ -35,33 +40,33 @@ export const fonts = {
 };
 
 export const colors = {
-  // Deep navy — headers and chrome only
+  // Ink fills — avatar, dark accents (never a page background in v3)
   navy900: '#0A1B2E',
   navy800: '#0E2540',
   navy700: '#16324F',
 
-  // One interactive accent
+  // One interactive accent + its soft tint
   blue600: '#1D6FD1',
   blue700: '#17599F',
   blue050: '#EDF4FC',
 
-  // Cool neutral ramp (tinted toward the navy world)
+  // Cool neutral ramp (slate) — canvas is one step below white
   surface: '#FFFFFF',
-  canvas: '#F5F7F9',
-  canvasSunken: '#EBEEF2',
-  hairline: '#E3E7EC',
-  hairlineStrong: '#CFD6DE',
+  canvas: '#F8FAFC',
+  canvasSunken: '#F2F4F7',
+  hairline: '#E4E7EC',
+  hairlineStrong: '#D0D5DD',
 
-  // Text roles — exactly three, plus muted metadata
+  // Text roles — ink is navy-not-black; exactly three, plus muted metadata
   textPrimary: '#0F1E30',
-  textSecondary: '#4A5A6D',
+  textSecondary: '#475467',
   textMuted: '#7E8B9B',
   textInverse: '#FFFFFF',
   textOnNavy: '#FFFFFF',
   textOnNavyMuted: '#93A7BD',
   textAccent: '#1D6FD1',
 
-  // Status — semantic only
+  // Status — soft semantic tints only (bg + ink pairs)
   success: '#1B7A4B',
   successBg: '#E9F4EE',
   warning: '#8A5A00',
@@ -71,7 +76,7 @@ export const colors = {
   info: '#1D6FD1',
   infoBg: '#EDF4FC',
 
-  scrim: 'rgba(10, 27, 46, 0.55)',
+  scrim: 'rgba(10, 27, 46, 0.5)',
 };
 
 export const spacing = {
@@ -88,7 +93,39 @@ export const radius = {
   sm: 6,
   md: 8,
   lg: 10,
+  xl: 12,
   pill: 999,
+};
+
+/**
+ * Elevation — floating layers only (research rule: content cards are flat).
+ * Tight, low, single-direction; no glows, no colored shadows.
+ */
+export const shadows = {
+  /** Login card, floating panels */
+  card: {
+    shadowColor: '#0F172A',
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  /** Bottom sheets and modals */
+  sheet: {
+    shadowColor: '#0F172A',
+    shadowOpacity: 0.14,
+    shadowOffset: { width: 0, height: -6 },
+    shadowRadius: 18,
+    elevation: 16,
+  },
+  /** Sticky action bar */
+  bar: {
+    shadowColor: '#0F172A',
+    shadowOpacity: 0.07,
+    shadowOffset: { width: 0, height: -2 },
+    shadowRadius: 10,
+    elevation: 12,
+  },
 };
 
 export const typography = {
@@ -188,13 +225,13 @@ export const textStyles = {
   },
 };
 
-/** Hairline border shorthand — borders at ~8% ink, no shadows. */
+/** Hairline border shorthand — borders, not elevation. */
 export const borders = {
   hairline: 1,
   color: colors.hairline,
   radius: radius.lg,
 };
 
-const theme = { fonts, colors, spacing, radius, typography, textStyles, borders };
+const theme = { fonts, colors, spacing, radius, shadows, typography, textStyles, borders };
 
 export default theme;

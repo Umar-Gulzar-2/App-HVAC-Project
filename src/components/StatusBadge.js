@@ -34,10 +34,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 5,
     alignSelf: 'flex-start',
-    borderRadius: radius.sm,
-    paddingHorizontal: 8,
+    borderRadius: radius.pill,
+    paddingHorizontal: 9,
     paddingVertical: 3,
   },
-  dot: { width: 5, height: 5, borderRadius: 3 },
+  dot: { width: 6, height: 6, borderRadius: 3 },
   text: { fontFamily: fonts.medium, fontSize: typography.sizeMeta, letterSpacing: 0.1 },
 });

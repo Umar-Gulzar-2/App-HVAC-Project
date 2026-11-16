@@ -1,15 +1,16 @@
 /**
- * AppHeader — flat deep-navy page header.
+ * AppHeader — light premium page header: white surface, hairline bottom,
+ * ink title, slate subtitle, mono metadata.
  * variant 'home': mono wordmark + user avatar (initials) + sign-out.
  * variant 'page': back chevron + title. Optional subtitle and meta line.
- * No rounded bottom edge, no decorative marks — chrome stays quiet.
+ * The ink avatar is the single dark anchor — chrome stays quiet.
  */
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, fonts, spacing, textStyles, typography } from '../theme/theme';
+import { colors, fonts, radius, spacing, typography } from '../theme/theme';
 
 function initialsOf(name) {
   if (!name) return '··';
@@ -32,7 +33,7 @@ export default function AppHeader({ title, subtitle, meta, variant = 'page', rol
       <View style={styles.topRow}>
         {variant === 'page' ? (
           <Pressable onPress={handleBack} hitSlop={12} accessibilityRole="button" accessibilityLabel="Go back" style={styles.backButton}>
-            <Ionicons name="chevron-back" size={24} color={colors.textOnNavy} />
+            <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
           </Pressable>
         ) : (
           <Text style={styles.wordmark}>HVAC COMPLY</Text>
@@ -74,35 +75,35 @@ export default function AppHeader({ title, subtitle, meta, variant = 'page', rol
 
 const styles = StyleSheet.create({
   header: {
-    backgroundColor: colors.navy900,
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.hairline,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.lg,
   },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 34, marginBottom: spacing.md },
-  backButton: { marginLeft: -6 },
+  backButton: { marginLeft: -6, padding: 4 },
   topRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   wordmark: {
     fontFamily: fonts.monoSemibold,
     fontSize: typography.sizeCaption,
     letterSpacing: 2.4,
-    color: colors.textOnNavyMuted,
+    color: colors.textPrimary,
   },
   avatar: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.navy700,
-    borderWidth: 1,
-    borderColor: '#27486B',
+    backgroundColor: colors.navy900,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: { fontFamily: fonts.semibold, fontSize: typography.sizeCaption, color: colors.textOnNavy, letterSpacing: 0.3 },
+  avatarText: { fontFamily: fonts.semibold, fontSize: typography.sizeCaption, color: colors.textInverse, letterSpacing: 0.3 },
   title: {
     fontFamily: fonts.semibold,
     fontSize: typography.sizeHeading,
     letterSpacing: -0.4,
-    color: colors.textOnNavy,
+    color: colors.textPrimary,
   },
   titleMono: {
     fontFamily: fonts.monoSemibold,
@@ -113,7 +114,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: fonts.regular,
     fontSize: typography.sizeBodySmall,
-    color: colors.textOnNavyMuted,
+    color: colors.textSecondary,
     marginTop: spacing.xs,
     lineHeight: 18,
   },
@@ -121,7 +122,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.monoMedium,
     fontSize: typography.sizeMeta,
     letterSpacing: 1,
-    color: '#6E87A3',
+    color: colors.textMuted,
     textTransform: 'uppercase',
     marginTop: spacing.sm,
   },
@@ -131,12 +132,11 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     gap: 6,
     marginTop: spacing.md,
-    borderWidth: 1,
-    borderColor: '#2A4A6D',
-    borderRadius: 999,
+    backgroundColor: colors.blue050,
+    borderRadius: radius.pill,
     paddingHorizontal: 10,
     paddingVertical: 3,
   },
-  roleDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#5BA0F0' },
-  roleText: { fontFamily: fonts.medium, fontSize: typography.sizeMeta, color: colors.textOnNavyMuted, letterSpacing: 0.4 },
+  roleDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.blue600 },
+  roleText: { fontFamily: fonts.medium, fontSize: typography.sizeMeta, color: colors.textAccent, letterSpacing: 0.4 },
 });

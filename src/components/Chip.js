@@ -1,5 +1,5 @@
 /**
- * Chip — filter chip: quiet outline by default, navy when selected.
+ * Chip — filter chip: white outline by default, accent-soft when selected.
  * Sentence case, radius 6, tight to the 4px grid.
  */
 import React from 'react';
@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
     minHeight: 34,
     justifyContent: 'center',
   },
-  selected: { backgroundColor: colors.navy900, borderColor: colors.navy900 },
+  selected: { backgroundColor: colors.blue050, borderColor: colors.blue600 },
   label: { fontFamily: fonts.medium, fontSize: typography.sizeCaption, color: colors.textSecondary },
-  selectedLabel: { color: colors.textInverse },
+  selectedLabel: { color: colors.textAccent },
 });

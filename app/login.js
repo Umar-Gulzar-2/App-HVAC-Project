@@ -1,5 +1,5 @@
 /**
- * Login / Signup screen.
+ * Login / Signup screen — premium light composition.
  *
  * Two modes:
  *  - Sign In: an existing owner or technician signs in.
@@ -16,7 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Button from '../src/components/Button';
 import TextField from '../src/components/TextField';
 import { useDemoSession } from '../src/context/DemoSessionContext';
-import { colors, fonts, radius, spacing, typography } from '../src/theme/theme';
+import { colors, fonts, radius, shadows, spacing, typography } from '../src/theme/theme';
 
 function validateEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
@@ -95,17 +95,18 @@ export default function LoginScreen() {
         contentContainerStyle={[styles.scroll, { paddingTop: insets.top + spacing.xxl, paddingBottom: insets.bottom + spacing.xl }]}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Brand block — navy field, mono lockup, plain-language context */}
+        {/* Brand block — ink on canvas, one accent rule */}
         <View style={styles.brand}>
           <Text style={styles.wordmark}>HVAC COMPLY</Text>
           <Text style={styles.brandName}>HVAC Comply</Text>
+          <View style={styles.accentRule} />
           <Text style={styles.brandTagline}>
             Equipment, refrigerant and service records{'\n'}for commercial HVAC companies
           </Text>
         </View>
 
-        {/* Credentials sheet */}
-        <View style={styles.sheet}>
+        {/* Credentials card — the one floating layer */}
+        <View style={styles.card}>
           <View style={styles.segment}>
             <Pressable style={[styles.segmentItem, mode === 'signin' && styles.segmentActive]} onPress={() => switchMode('signin')}>
               <Text style={[styles.segmentLabel, mode === 'signin' && styles.segmentLabelActive]}>Sign In</Text>
@@ -190,34 +191,43 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.navy900 },
+  root: { flex: 1, backgroundColor: colors.canvas },
   scroll: { paddingHorizontal: spacing.lg, minHeight: '100%' },
-  brand: { marginBottom: spacing.xl },
+  brand: { marginBottom: spacing.xl, paddingTop: spacing.sm },
   wordmark: {
     fontFamily: fonts.monoSemibold,
     fontSize: typography.sizeCaption,
     letterSpacing: 2.6,
-    color: '#6E87A3',
+    color: colors.textSecondary,
     marginBottom: spacing.lg,
   },
   brandName: {
     fontFamily: fonts.semibold,
     fontSize: typography.sizeDisplay,
     letterSpacing: -0.8,
-    color: colors.textOnNavy,
+    color: colors.textPrimary,
+  },
+  accentRule: {
+    width: 36,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: colors.blue600,
+    marginTop: spacing.md,
   },
   brandTagline: {
     fontFamily: fonts.regular,
     fontSize: typography.sizeBodySmall,
-    color: colors.textOnNavyMuted,
-    marginTop: spacing.sm,
+    color: colors.textSecondary,
+    marginTop: spacing.md,
     lineHeight: 19,
   },
-  sheet: {
+  card: {
     backgroundColor: colors.surface,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    borderColor: colors.hairline,
     padding: spacing.xl,
+    ...shadows.card,
   },
   segment: {
     flexDirection: 'row',
@@ -240,27 +250,27 @@ const styles = StyleSheet.create({
   preview: {
     marginTop: spacing.lg,
     borderWidth: 1,
-    borderColor: '#27486B',
+    borderColor: colors.hairline,
     borderRadius: radius.lg,
-    backgroundColor: colors.navy800,
+    backgroundColor: colors.canvasSunken,
     padding: spacing.lg,
   },
   previewLabel: {
     fontFamily: fonts.monoMedium,
     fontSize: typography.sizeMeta,
     letterSpacing: 1.4,
-    color: '#7FA3CC',
+    color: colors.textMuted,
     textTransform: 'uppercase',
     marginBottom: spacing.xs,
   },
-  previewText: { fontFamily: fonts.regular, fontSize: typography.sizeCaption, color: colors.textOnNavyMuted, lineHeight: 17 },
+  previewText: { fontFamily: fonts.regular, fontSize: typography.sizeCaption, color: colors.textSecondary, lineHeight: 17 },
   previewButtons: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
-  previewButton: { flex: 1, backgroundColor: colors.surface },
+  previewButton: { flex: 1 },
   footer: {
     fontFamily: fonts.mono,
     fontSize: typography.sizeMeta,
     letterSpacing: 0.8,
-    color: '#5E7794',
+    color: colors.textMuted,
     textAlign: 'center',
     marginTop: spacing.xl,
     textTransform: 'uppercase',

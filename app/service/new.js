@@ -19,7 +19,7 @@ import SignOutButton from '../../src/components/SignOutButton';
 import TextField from '../../src/components/TextField';
 import { useDemoSession } from '../../src/context/DemoSessionContext';
 import { acModelsById, projects, units } from '../../src/data/sampleData';
-import { colors, fonts, radius, spacing, typography } from '../../src/theme/theme';
+import { colors, fonts, radius, shadows, spacing, typography } from '../../src/theme/theme';
 
 const SERVICE_TYPES = [
   { name: 'Installation', icon: 'construct-outline' },
@@ -191,7 +191,7 @@ export default function ServiceFormScreen() {
                 accessibilityState={{ selected }}
                 testID={`type-${type.name}`}
               >
-                <Ionicons name={type.icon} size={18} color={selected ? colors.textInverse : colors.textSecondary} />
+                <Ionicons name={type.icon} size={18} color={selected ? colors.blue600 : colors.textSecondary} />
                 <Text style={[styles.typeLabel, selected && styles.typeLabelActive]}>{type.name}</Text>
               </Pressable>
             );
@@ -334,9 +334,9 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     minWidth: '47%',
   },
-  typeTileActive: { backgroundColor: colors.navy900, borderColor: colors.navy900 },
+  typeTileActive: { backgroundColor: colors.blue050, borderColor: colors.blue600 },
   typeLabel: { fontFamily: fonts.medium, fontSize: typography.sizeCaption, color: colors.textSecondary, flexShrink: 1 },
-  typeLabelActive: { color: colors.textInverse },
+  typeLabelActive: { color: colors.textPrimary },
   previewNote: {
     fontFamily: fonts.mono,
     fontSize: typography.sizeMeta,
@@ -353,6 +353,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 16,
     padding: spacing.xl,
     maxHeight: '75%',
+    ...shadows.sheet,
   },
   sheetTitle: { fontFamily: fonts.medium, fontSize: typography.sizeBodyLarge, color: colors.textPrimary, marginBottom: spacing.sm },
   sheetItem: { paddingVertical: spacing.md, borderTopWidth: 1, borderTopColor: colors.hairline },

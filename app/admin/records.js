@@ -19,7 +19,7 @@ import StatusBadge from '../../src/components/StatusBadge';
 import TextField from '../../src/components/TextField';
 import { useDemoSession } from '../../src/context/DemoSessionContext';
 import { projects, projectsById, serviceRecords, technicians, techniciansById, unitsById } from '../../src/data/sampleData';
-import { colors, fonts, radius, spacing, typography } from '../../src/theme/theme';
+import { colors, fonts, radius, shadows, spacing, typography } from '../../src/theme/theme';
 
 const TYPE_FILTERS = ['All', 'Installation', 'Repair', 'Maintenance', 'Refrigerant Service', 'Replacement'];
 
@@ -226,6 +226,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 16,
     padding: spacing.xl,
     maxHeight: '80%',
+    ...shadows.sheet,
   },
   sheetTitle: { fontFamily: fonts.medium, fontSize: typography.sizeBodyLarge, color: colors.textPrimary, marginBottom: spacing.sm },
   sheetScroll: { flexGrow: 0 },

@@ -21,11 +21,20 @@ export default function TextField({
   testID,
 }) {
   const [hidden, setHidden] = useState(secureTextEntry);
+  const [focused, setFocused] = useState(false);
 
   return (
     <View style={styles.wrapper}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
-      <View style={[styles.inputRow, error && styles.inputRowError, multiline && styles.multilineRow, !editable && styles.disabledRow]}>
+      <View
+        style={[
+          styles.inputRow,
+          focused && styles.inputRowFocused,
+          error && styles.inputRowError,
+          multiline && styles.multilineRow,
+          !editable && styles.disabledRow,
+        ]}
+      >
         <TextInput
           style={[styles.input, multiline && styles.multilineInput]}
           value={value}
@@ -38,6 +47,8 @@ export default function TextField({
           autoCorrect={false}
           multiline={multiline}
           editable={editable}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
           testID={testID}
           accessibilityLabel={label || placeholder}
         />
@@ -72,6 +83,13 @@ const styles = StyleSheet.create({
     minHeight: 46,
   },
   multilineRow: { alignItems: 'flex-start', paddingVertical: spacing.sm },
+  inputRowFocused: {
+    borderColor: colors.blue600,
+    shadowColor: colors.blue600,
+    shadowOpacity: 0.16,
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 3,
+  },
   inputRowError: { borderColor: colors.danger },
   disabledRow: { backgroundColor: colors.canvasSunken },
   input: { flex: 1, fontFamily: fonts.regular, fontSize: typography.sizeBody, color: colors.textPrimary, paddingVertical: 10 },
